@@ -4,7 +4,7 @@ Quickstart
 
 First, clone the project on your local machine: ::
 
-    git clone https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/ahlipay-ekyc
+    https://github.com/decapolis-dfg/decapolis-parser.git
 Then activate poetry by typing: ::
 
     poetry shell

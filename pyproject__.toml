@@ -2,7 +2,7 @@
 name = "countries_configration"
 version = "0.1.0"
 description = ""
-authors = ["hisham <hisham.nasrallah@ahli.com>"]
+authors = ["hisham <h.nasralla@decapolis.io>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"

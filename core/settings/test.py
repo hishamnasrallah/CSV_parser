@@ -12,7 +12,7 @@ class TestAppSettings(AppSettings):
 
     secret_key: SecretStr = SecretStr("test_secret")
 
-    database_url: PostgresDsn = "postgresql://postgres_ahli:postgres@localhost:5432/countrydb"
+    database_url: PostgresDsn = "postgresql://username:password@localhost:5432/db_name"
     max_connection_count: int = 5
     min_connection_count: int = 5
 

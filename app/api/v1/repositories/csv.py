@@ -81,6 +81,6 @@ def upload_CSV(request):
 
     data = {
         'image_key': request_dict['image_key'],
-        'bucket_name': 'ahli-users-profile-picture'
+        'bucket_name': 'profile-picture'
     }
     return data
