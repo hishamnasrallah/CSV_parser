@@ -2,14 +2,23 @@
 from celery_config.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
-import time
 
 celery = create_celery()
 
 
 @celery.task(name='add new file process task')
 def add_tasks(file_id, file_path, file_name, frequency, company_id, last_run):
+    """
 
+    :param file_id: the row id for the mapper configuration
+    :param file_path: file path to using it in the celery function
+    :param file_name: file name to use it as prefix name for all files in the real path
+    :param frequency: the frequency in minutes
+    :param company_id: company id from the core application, and it will be in the token
+    :param last_run: when this configuration ran before
+    :return: after checking the time difference between system time and the last run.
+    if it greater than the frequency the function wil run.
+    """
     time_diff_minutes = 0
     if last_run:
         time_diff_minutes = time_difference_in_minutes(last_run)

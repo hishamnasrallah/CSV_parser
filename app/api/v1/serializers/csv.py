@@ -1,9 +1,8 @@
-from typing import List, Optional
-from fastapi import UploadFile, Form, Request
+from typing import List
+from pydantic import Field
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
-from app.api.v1.models import Frequency
-
+from app.api.models import Frequency
 
 # from utils.upload_manager import upload_file
 
@@ -32,6 +31,7 @@ class FileTaskConfigRequest(BaseModel):
     file_name: str
     frequency: Frequency
     file_path: str
+    process_id: int
 
     # @classmethod
     # async def as_form(cls, mapper: dict, map_name: str, frequency: Frequency, path: str, file: UploadFile = Form(),):
@@ -51,11 +51,33 @@ class FileTaskConfigResponse(BaseResponse):
 class Dashboard(BaseModel):
     file_name: str
     file_path: str
-    frequency: Frequency = Frequency
+    frequency: Frequency
 
 
 class DashboardResponse(BaseResponse):
     data: List[Dashboard]
+
+
+class MapperDetail(BaseModel):
+    configuration_info: Dashboard
+    field_name: str
+    map_field_name: str
+
+
+class MapperDetailResponse(BaseResponse):
+    data: List[MapperDetail]
+
+
+class DebugHistory(BaseModel):
+    id: int
+    file_id: int
+    file_size_kb: int
+    file_name_as_received: str
+    task_id: str
+
+
+class DebugHistoryResponse(BaseResponse):
+    data: List[DebugHistory]
 
 
 class FileProcessConfig(BaseModel):

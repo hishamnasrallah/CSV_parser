@@ -1,7 +1,8 @@
 import csv
 import os
-from app.api.v1.models import FileReceiveHistory
-from app.api.v1.repositories.csv import get_file_history, get_file_mapper
+
+from app.api.repositories.csv import get_file_history, get_file_mapper
+from app.brokers.decapolis_core import CoreApplicationBroker
 
 
 class CSVHelper:
@@ -67,10 +68,13 @@ class CSVHelper:
             # print(mapped_data)
         return mapped_data
 
-    def send_data(self):
+    def send_data(self, company_id, process_id, data):
+        broker = CoreApplicationBroker()
+        broker.post_collected_data(company_id=company_id, process_id=process_id, data=data, response_message_key=201)
+
+    def store_history(self):
+        #// TODO: get file info and insert the data into history table
         pass
-
-
 
     def main(self):
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
@@ -78,7 +82,8 @@ class CSVHelper:
 
             data_headers = self.get_headers()
             mapped_data = self.read_file(path=self.file_path, file_name=file_name, headers=data_headers)
-
-            self.send_data()
+            process_id = None
+            self.store_history()
+            self.send_data(self.company_id, process_id, mapped_data)
             return mapped_data
 

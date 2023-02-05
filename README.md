@@ -24,10 +24,22 @@ Then create ``.env`` file and fill it by the following variables ::
     DB_HOST=localhost
     DB_PORT=5432
     ENVIRONMENT=local
+    CELERY_BROKER_URL=redis://127.0.0.1:6379/0
+    CELERY_RESULT_BACKEND=redis://127.0.0.1:6379/0
 Then run the migration files use::
 
     alembic upgrade head
-Finally to run the app::
+Then run celery:
+
+Note: using the following command will make sure that celery will be reloaded automatic when any changes happen in the code
+
+     watchfiles   --filter python   'celery -A app.main.celery worker --loglevel=info'
+
+then run flower:
+    
+    celery -A main.celery flower --port=5555
+
+Finally, to run the app:
 
     uvicorn app.main:app --reload
     or
@@ -62,14 +74,16 @@ please try to keep these notes in your mind
 
 - Also don’t forget to add each model you build, to the model’s __init__.py file to allow auto-generation of migration fiels.
 
-2- **Don't change the value of environment variable ENVIRONMENT, Keep it "local" always**
+2- **Don't change the value of environment variable ENVIRONMENT, Keep it "local" always in your local machine**
 
 
 
 API documentation
 ----------
 
-All APIs are available on ``{{base_url}}/users/docs`` or ``{{base_url}}/users/redoc`` paths with Swagger or ReDoc.
+All APIs are available on ``{{base_url}}/parser/docs`` or ``{{base_url}}/parser/redoc`` paths with Swagger or ReDoc.
+
+
 
 
 

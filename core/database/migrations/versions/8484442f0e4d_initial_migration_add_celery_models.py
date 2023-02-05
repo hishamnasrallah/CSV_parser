@@ -1,8 +1,8 @@
-"""Added celery tables
+"""initial migration add celery models
 
-Revision ID: 8699db761750
+Revision ID: 8484442f0e4d
 Revises: 
-Create Date: 2023-01-19 13:38:56.881462
+Create Date: 2023-02-04 15:59:54.941663
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '8699db761750'
+revision = '8484442f0e4d'
 down_revision = None
 branch_labels = None
 depends_on = None

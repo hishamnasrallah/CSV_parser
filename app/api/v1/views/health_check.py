@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.api.v1.repositories.common import CRUD
+from app.api.repositories.common import CRUD
 from core.constants.response_messages import ResponseConstants
 from utils.http_response import http_response
 
