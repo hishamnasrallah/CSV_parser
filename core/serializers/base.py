@@ -1,11 +1,12 @@
 from json import dumps
 
-from pydantic import BaseModel as PBaseModel
+# from pydantic import BaseModel as PBaseModel
+from fastapi_camelcase import CamelModel
 
 import datetime
 
 
-class BaseModel(PBaseModel):
+class BaseModel(CamelModel):
     def dict(self):
         data = {k: v for k, v in self.__dict__.items() if v is not None}
         for i in data:

@@ -48,6 +48,7 @@ fastapi-versioning = "^0.10.0"
 python-multipart = "^0.0.5"
 pyjwt = "^2.6.0"
 flake8-fastapi = "^0.7.0"
+fastapi-camelcase = "^1.0.5"
 
 [tool.poetry.dev-dependencies]
 

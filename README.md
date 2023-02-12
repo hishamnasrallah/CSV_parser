@@ -37,7 +37,7 @@ Note: using the following command will make sure that celery will be reloaded au
 
 then run flower:
     
-    celery -A main.celery flower --port=5555
+    celery -A app.main.celery flower --port=5555
 
 Finally, to run the app:
 

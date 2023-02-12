@@ -1,5 +1,6 @@
 # from asyncpg import RaiseError
 import traceback
+from datetime import datetime
 
 from fastapi import HTTPException, status
 # from fastapi.encoders import jsonable_encoder
@@ -8,6 +9,7 @@ from fastapi.encoders import jsonable_encoder
 # import json
 from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
 from app.api.repositories.common import CRUD
+from app.api.v1.serializers.csv import MapperDetail
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig
 
@@ -120,6 +122,32 @@ def get_company_processes(token, request):
     return jsonable_encoder(response)
 
 
+def create_file_history(file_id, file_size, file_name_as_received, task_id="1"):
+    history_rec = FileReceiveHistory(file_id=file_id, file_size_kb=file_size, file_name_as_received=file_name_as_received, task_id=task_id)
+    history_rec = CRUD().add(history_rec)
+    return history_rec
+
+
+def update_last_run(file_config_id, db=CRUD().db_conn()):
+    config = db.query(ProcessConfig).filter(ProcessConfig.id == file_config_id)
+    if not config.first():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CSVConfigDoesNotExist().message_key)
+    else:
+        # config_obj = config.first()
+        stored_data = jsonable_encoder(config.first())
+
+        format = "%Y-%m-%d %H:%M:%S.%f"
+
+        time_now = datetime.strptime(str(datetime.now()), format)
+
+        stored_data["last_run"] = time_now
+
+        config.update(stored_data)
+        db.commit()
+        return stored_data
+
+
+
 def create_config(request_body, token, db):
     """
 
@@ -135,10 +163,19 @@ def create_config(request_body, token, db):
         rec = ProcessConfig(**request_dict)
         file_config_rec = CRUD().add(rec)
         file_id = file_config_rec.id
+        response = jsonable_encoder(file_config_rec)
+        mappers = []
         for key, value in mapper.items():
             map_rec = ProcessMapField(file_id=file_id, field_name=key, map_field_name=value)
-            CRUD().add(map_rec)
-        # mapper_rec =
+            stored_map_rec = CRUD().add(map_rec)
+            # field_mappers = db.query(ProcessMapField).filter(ProcessMapField.file_id == file_id).all()
+            mappers.append(jsonable_encoder(stored_map_rec))
+
+        print(mappers)
+        print(type(mappers))
+        response["mapper"] = mappers
+
+        return response
     except Exception as e:
         print(f" \n <====== Exception =====> : \n {str(traceback.format_exc())} \n <==== End Exception ===>  \n")
         print(str(e))

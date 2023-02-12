@@ -26,7 +26,6 @@ class FileTaskConfig(BaseModel):
 
 
 class FileTaskConfigRequest(BaseModel):
-    # template_file_key: str
     mapper: dict
     file_name: str
     frequency: Frequency
@@ -44,8 +43,21 @@ class FileTaskConfigRequest(BaseModel):
     #         print("Exception :", e)
 
 
+class FieldMapper(BaseModel):
+    field_name: str
+    map_field_name: str
+
+
+class FileTaskConfigBaseResponse(BaseModel):
+    mapper: List[FieldMapper]
+    file_name: str
+    frequency: Frequency
+    file_path: str
+    process_id: int
+
+
 class FileTaskConfigResponse(BaseResponse):
-    data: List[FileTaskConfigRequest]
+    data: List[FileTaskConfigBaseResponse]
 
 
 class Dashboard(BaseModel):
