@@ -1,17 +1,20 @@
 import csv
 import os
 
-from app.api.repositories.csv import get_file_history, get_file_mapper
+from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.brokers.decapolis_core import CoreApplicationBroker
 
 
 class CSVHelper:
 
-    def __init__(self, company_id, file_id, file_name, file_path):
+    def __init__(self, task_id, company_id, file_id, file_name, file_path):
+        self.file_size = None
+        self.file_name_as_received = None
         self.company_id = company_id
         self.file_name = file_name
         self.file_path = file_path
         self.file_id = file_id
+        self.task_id = task_id
 
     def read_files_by_prefix(self, prefix):
         files = []
@@ -29,8 +32,8 @@ class CSVHelper:
         for file in files:
             history = get_file_history(file_id=self.file_id, file_name=file)
             if history.first():
-
-                files.pop(file)
+                print(type(files))
+                files.remove(file)
 
         return files
 
@@ -73,17 +76,34 @@ class CSVHelper:
         broker.post_collected_data(company_id=company_id, process_id=process_id, data=data, response_message_key=201)
 
     def store_history(self):
-        #// TODO: get file info and insert the data into history table
-        pass
+        create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
+        update_last_run(self.file_id)
+
+
+    def get_file_info(self):
+        # its static now
+        import os
+        size = os.path.getsize(self.file_path)
+        self.file_size = size
+        print(size)
+
+        # with open("/home/hisham/Downloads/headers.csv", 'r') as file:
+        #     csvreader = csv.reader(file)
+        #     header = next(csvreader)
+        #     size = os.path.getsize("/media/hisham/Extreme SSD/mob files/images/Dead sea movenpick-001.zip")
+        #     print(size)
+        #     print(type(size))
+        # return header
 
     def main(self):
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
         for file_name in new_files_names:
-
+            self.file_name_as_received = file_name
             data_headers = self.get_headers()
             mapped_data = self.read_file(path=self.file_path, file_name=file_name, headers=data_headers)
             process_id = None
+            self.get_file_info()
             self.store_history()
-            self.send_data(self.company_id, process_id, mapped_data)
+            # self.send_data(self.company_id, process_id, mapped_data)
             return mapped_data
 
