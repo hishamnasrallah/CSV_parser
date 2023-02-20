@@ -8,7 +8,7 @@ from json import dumps
 
 
 class Frequency(int, enum.Enum):
-    sec_30 = 0.40
+    min_1 = 1
     min_15 = 15
     min_30 = 30
     hour_1 = 60

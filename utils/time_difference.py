@@ -10,6 +10,7 @@ def time_difference_in_minutes(last_run):
         last_run = datetime.strptime(str(last_run), format1)
         print(last_run)
         # last_run = datetime.strptime(last_run, format)
+
     except:
         time_now = datetime.strptime(str(datetime.now()), format2)
         print(time_now)
