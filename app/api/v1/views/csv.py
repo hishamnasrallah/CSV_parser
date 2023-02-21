@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/file-process-config", response_model=FileTaskConfigResponse)
+@router.post("/mappers", response_model=FileTaskConfigResponse)
 def create_new_file_process(request: Request, request_body: FileTaskConfigRequest,
                             token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
@@ -54,7 +54,7 @@ def get_mapper_history(request: Request, id:int, token=Depends(validate_authoriz
 
 
 # 2 delete config
-@router.delete("/dashboard/{id}")
+@router.delete("/mapper/{id}")
 def delete_config(request: Request, id: int, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
 
@@ -64,7 +64,7 @@ def delete_config(request: Request, id: int, token=Depends(validate_authorizatio
 
 
 # 2 show history
-# @router.get("/dashboard/{file_id}", response_model=DashboardResponse)
+# @router.get("/mapper/{file_id}", response_model=DashboardResponse)
 # def get_file_history(request: Request, file_id: int, token=Depends(validate_authorization),
 #            db: Session = Depends(CRUD().db_conn)):
 #     print(file_id)
