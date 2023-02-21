@@ -1,9 +1,3 @@
-import pathlib
-import os
-print(pathlib.Path(__file__).parent.resolve())
-print(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-)
-
 import jwt
 import datetime
 

@@ -14,7 +14,6 @@ class SFTPHelper:
 
     def change_dir(self, path="transfer/napproai"):
         self.sftp.chdir(path)
-        print(self.sftp.getcwd())
 
     def copy_file_from_server(self, path, tmp_path, file_name):
         self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{file_name}")

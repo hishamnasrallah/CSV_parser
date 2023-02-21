@@ -1,12 +1,8 @@
-# from asyncpg import RaiseError
 import traceback
 from datetime import datetime
 
 from fastapi import HTTPException, status
-# from fastapi.encoders import jsonable_encoder
-# from sqlalchemy import and_
 from fastapi.encoders import jsonable_encoder
-# import json
 from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
 from app.api.repositories.common import CRUD
 from app.api.v1.serializers.csv import MapperDetail
@@ -79,7 +75,6 @@ def get_file_mapper(file_id, db=CRUD().db_conn()):
     :return: all fields mapping for specific file
     """
     mapper = db.query(ProcessMapField).filter(ProcessMapField.file_id == file_id).all()
-    print(mapper)
     return mapper
 
 
@@ -94,18 +89,6 @@ def get_file_history(file_id, file_name=None, db=CRUD().db_conn()):
     history = db.query(FileReceiveHistory).filter(FileReceiveHistory.file_id == file_id,
                                                   FileReceiveHistory.file_name_as_received == file_name)
     return history
-
-
-# def get_file_process_history(file_id, db):
-#     """
-#
-#     :param file_id: mapper configuration id
-#     :param db: the database connection
-#     :return: all records history for specific file configuration
-#     """
-#     history = db.query(FileReceiveHistory).filter(FileReceiveHistory.file_id == file_id).all()
-#     jsonable_encoder(history)
-#     return jsonable_encoder(history)
 
 
 def get_company_processes(token, request):
@@ -133,7 +116,6 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
     if not config.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CSVConfigDoesNotExist().message_key)
     else:
-        # config_obj = config.first()
         stored_data = jsonable_encoder(config.first())
 
         format = "%Y-%m-%d %H:%M:%S.%f"
@@ -159,7 +141,6 @@ def create_config(request_body, token, db):
     request_dict["company_id"] = token["company_id"]
     try:
         mapper = request_dict.pop("mapper", None)
-        print(request_dict)
         rec = ProcessConfig(**request_dict)
         file_config_rec = CRUD().add(rec)
         file_id = file_config_rec.id
@@ -168,11 +149,8 @@ def create_config(request_body, token, db):
         for key, value in mapper.items():
             map_rec = ProcessMapField(file_id=file_id, field_name=key, map_field_name=value)
             stored_map_rec = CRUD().add(map_rec)
-            # field_mappers = db.query(ProcessMapField).filter(ProcessMapField.file_id == file_id).all()
             mappers.append(jsonable_encoder(stored_map_rec))
 
-        print(mappers)
-        print(type(mappers))
         response["mapper"] = mappers
 
         return response
@@ -183,16 +161,8 @@ def create_config(request_body, token, db):
 
 
 def upload_CSV(request):
-
-    print(request)
     request_dict = request.dict()
-
     db = CRUD().db_conn()
-    # img = db.query(CSVUploadModel).filter(CSVUploadModel.cognito_sub == sub)
-    # image = img.first()
-
-    # if image:
-    #     raise CognitoSubExist()
     rec = FileReceiveHistory(**request_dict)
     CRUD().add(rec)
 

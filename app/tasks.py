@@ -25,13 +25,9 @@ def add_tasks(file_id, file_path, file_name, frequency, company_id, last_run):
     """
     time_diff_minutes = 0
 
-    print(file_name)
     if last_run:
         time_diff_minutes = time_difference_in_minutes(last_run)
         if time_diff_minutes < frequency:
-            print(time_diff_minutes)
-        # else:
-        #     print(frequency)
             return f"FILE: '{file_name}' need more time to send to celery"
 
 

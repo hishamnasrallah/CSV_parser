@@ -51,16 +51,6 @@ def custom_openapi():
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
-
-
-# @shared_task
-# def divide(x, y):
-#     import time
-#     time.sleep(5)
-#     return x / y
-
-# task = divide.delay(1, 2)
-# print(task)
 @app.on_event("startup")
 @repeat_every(seconds=30)
 def init_tasks(db: Session = CRUD().db_conn()):

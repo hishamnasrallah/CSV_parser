@@ -44,11 +44,5 @@ class CountryResponseModel(BaseResponse):
     is_active: bool
     phone_code: str
     note: str
-# class ShowCountrySch(CountryConfSch):
-#     alpha_3: str
-#     name: str
-#     flag: str
-#
-#     class Config:
-#         orm_mode = True
+
 

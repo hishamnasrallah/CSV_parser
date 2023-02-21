@@ -14,17 +14,14 @@ print(logger)
 
 async def log_requests(request: Request, call_next):
     wrap = "\""
-    print("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
     if 'beat' not in request.url.path and '/docs' not in request.url.path and '/openapi.json' not in request.url.path and settings.env != AppEnvTypes.prod:
         logger.info(f"{wrap}request: {request.method} {request.url.path} {request.url.query}{wrap}")
-        # print("request body:", Request.body.__dict__)
         body = request.body()
         print("request body:", Request.body.__dict__)
 
         # print("request body:", body)
 
         start_time = time.time()
-        # print(call_next)
         response = await call_next(request)
         process_time = (time.time() - start_time) * 1000
         formatted_process_time = '{0:.2f}'.format(process_time)

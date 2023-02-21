@@ -25,7 +25,6 @@ def create_new_file_process(request: Request, request_body: FileTaskConfigReques
                          message=ResponseConstants.CREATED_MSG)
 
 
-# 1
 @router.get("/mappers", response_model=DashboardResponse)
 def get_mappers_configs(request: Request, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
@@ -53,7 +52,6 @@ def get_mapper_history(request: Request, id:int, token=Depends(validate_authoriz
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
-# 2 delete config
 @router.delete("/mapper/{id}")
 def delete_config(request: Request, id: int, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
@@ -61,33 +59,4 @@ def delete_config(request: Request, id: int, token=Depends(validate_authorizatio
     data = csv.delete_config(id, token, db)
     return http_response(data=data, status=status.HTTP_204_NO_CONTENT,
                          message=ResponseConstants.DELETED_MSG)
-
-
-# 2 show history
-# @router.get("/mapper/{file_id}", response_model=DashboardResponse)
-# def get_file_history(request: Request, file_id: int, token=Depends(validate_authorization),
-#            db: Session = Depends(CRUD().db_conn)):
-#     print(file_id)
-#     data = csv.get_file_process_history(file_id, db)
-#     return http_response(data=data, status=status.HTTP_200_OK,
-#                          message=ResponseConstants.RETRIEVED_MSG)
-
-# 2 get company's processes
-# @router.get("/processes", response_model=DashboardResponse)
-# def get_file_history(request: Request, token=Depends(validate_authorization),
-#            db: Session = Depends(CRUD().db_conn)):
-#     data = csv.get_company_processes(token, request)
-#     return http_response(data=data, status=status.HTTP_200_OK,
-#                          message=ResponseConstants.RETRIEVED_MSG)
-
-
-# # 2 create new configuration
-# @router.post("/task", response_model=DashboardResponse)
-# def upload(request: Request, token=Depends(validate_authorization),
-#            db: Session = Depends(CRUD().db_conn)):
-#     # print(token,"adasdasd")
-#
-#     data = csv.get_dashboard(token, db)
-#     return http_response(data=data, message=ResponseConstants.CREATED_MSG,
-#                          status=status.HTTP_201_CREATED)
 
