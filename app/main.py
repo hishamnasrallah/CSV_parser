@@ -5,7 +5,8 @@ from fastapi_utils.tasks import repeat_every
 import uvicorn
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
-from starlette.middleware.cors import CORSMiddleware
+# from starlette.middleware.cors import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware
 from app.api.models import ProcessConfig
 from app.api.repositories.common import CRUD
 from app.api.v1.routers import api_router
@@ -20,11 +21,11 @@ logger.level = logging.INFO
 
 app = FastAPI(title="Parser", docs_url="/parser/docs",
               openapi_url="/parser/openapi.json")
-app.celery_app = create_celery()
-celery = app.celery_app
+# app.celery_app = create_celery()
+# celery = app.celery_app
 
 # CORS
-origins = []
+origins = ["*"]
 
 # Set all CORS enabled origins
 app.add_middleware(
@@ -50,6 +51,7 @@ def custom_openapi():
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
+
 
 @app.on_event("startup")
 @repeat_every(seconds=30)
