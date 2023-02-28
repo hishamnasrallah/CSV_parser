@@ -28,14 +28,16 @@ def add_tasks(file_id, file_path, file_name, frequency, company_id, last_run):
     if last_run:
         time_diff_minutes = time_difference_in_minutes(last_run)
         if time_diff_minutes < frequency:
-            return f"FILE: '{file_name}' need more time to send to celery"
+            return f"FILE: '{file_name}' need MORE TIME to send to celery"
 
 
     if time_diff_minutes > frequency or not last_run:
         csv_helper = CSVHelper(task_id=task_id, company_id=company_id, file_id=file_id, file_name=file_name, file_path=file_path)
         x = csv_helper.main()
         if x == "No files":
-            return f"NO NEW FILE with prefix: '{file_name}'"
-        print("mapped_data  : ", x)
+            return f"NO NEW file with prefix: '{file_name}'"
+        # print("mapped_data  : ", x)
 
-        return f"FILE: '{file_name}' sent to celery"
+        return f"FILE: '{file_name}' SENT to celery \n \n \n \n " #+ f"  {str(x)}"
+
+

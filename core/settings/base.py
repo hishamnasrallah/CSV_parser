@@ -55,7 +55,9 @@ class BaseAppSettings(BaseSettings):
     @property
     def celery_db_url(self):
         try:
-            return "db+postgresql" + "://" + self.db_username + ":" + self.db_password + \
+            # return "db+postgresql+psycopg2://"  + self.db_username + ":" + self.db_password + \
+
+            return "db+postgresql://" + self.db_username + ":" + self.db_password + \
                    "@" + self.db_host + ":" + self.db_port + "/" + self.db_name
         except:
             raise DataBaseConnectionException

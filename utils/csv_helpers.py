@@ -45,7 +45,7 @@ class CSVHelper:
         mappers = get_file_mapper(self.file_id)
         list_header_fields = []
         for mapper in mappers:
-            list_header_fields.append(mapper.map_field_name)
+            list_header_fields.append({"column_name": mapper.map_field_name, "is_ignored": mapper.is_ignored})
         return list_header_fields
 
     def copy_file_to_tmp_dir(self, file_name):
@@ -59,7 +59,8 @@ class CSVHelper:
 
     def copy_file_to_tmp_without_sftp(self):
         import shutil
-        shutil.copy2(self.file_path+"/"+self.file_name_as_received, self.tmp_path+"/"+self.file_name_as_received)
+        shutil.copy2(self.file_path + "/" + self.file_name_as_received,
+                     self.tmp_path + "/" + self.file_name_as_received)
 
     def copy_file_to_tmp_sftp(self):
         sftp_helper = SFTPHelper()
@@ -68,32 +69,30 @@ class CSVHelper:
         sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
                                           file_name=self.file_name_as_received)
 
+        sftp_helper.close_connection()
+
     def remove_temp_file(self, full_file_path):
         os.unlink(full_file_path)
 
     def read_file(self, file_name=None, headers=None):
-
         with open(f"{self.tmp_path}/{file_name}", "r") as file:
 
             keys = headers
             headers = []
-            for eachKey in keys:
-                counter = 0
-                while (eachKey in headers):
-                    counter += 1
-                    eachKey = eachKey[:len(eachKey) - (0 if counter == 1 else 1)] + str(counter)
-                headers.append(eachKey)
+            for each_key in keys:
+                headers.append(each_key)
 
             mapped_data = []
             reader = csv.reader(file, delimiter=',', skipinitialspace=True)
-            for eachLine in reader:
-                eachIssue = dict()
-                columnIndex = 0
-                for eachColumn in eachLine:
-                    if columnIndex < len(headers):
-                        eachIssue[headers[columnIndex]] = eachColumn
-                        columnIndex += 1
-                mapped_data.append(eachIssue)
+            for each_line in reader:
+                each_record = dict()
+                column_index = 0
+                for each_column in each_line:
+                    if column_index < len(headers):
+                        if headers[column_index]["is_ignored"] != True:
+                            each_record[headers[column_index]["column_name"]] = each_column
+                        column_index += 1
+                mapped_data.append(each_record)
         return mapped_data
 
     def send_data(self, company_id, process_id, data):
@@ -110,15 +109,14 @@ class CSVHelper:
         self.tmp_path = os.path.join(current_dir, sub_folder)
 
     def get_file_info(self):
+        # // TODO: timeout
         try:
-            size = os.path.getsize(self.tmp_path+"/"+self.file_name_as_received)
+            size = os.path.getsize(self.tmp_path + "/" + self.file_name_as_received)
         except:
             sleep(secs=5)
             self.get_file_info()
 
         self.file_size = size
-
-
 
     def main(self):
         self.get_tmp_path()
@@ -130,13 +128,15 @@ class CSVHelper:
             self.file_name_as_received = file_name
 
             self.copy_file_to_tmp_sftp()
-            #// TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
+            # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
             data_headers = self.get_headers()
             self.get_file_info()
             mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
             self.store_history()
-            self.remove_temp_file(self.tmp_path+"/"+self.file_name_as_received)
-            #// TODO: send data to core API
+            self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
+            # // TODO: send data to core API one by one using different celery task
+
             # self.send_data(self.company_id, process_id, mapped_data)
+
             return mapped_data

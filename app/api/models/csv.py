@@ -39,6 +39,7 @@ class ProcessMapField(BaseModelMixin, Base):
     file_id = Column(Integer, index=True)
     field_name = Column(String, nullable=True)
     map_field_name = Column(String, nullable=True)
+    is_ignored = Column(Boolean, default=False)
 
     def as_dict(self):
         data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
