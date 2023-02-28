@@ -12,8 +12,6 @@ def crud(query):
 
 class CRUD:
 
-    # def __init__(self, _query):
-    #     self._query = _query
 
     def __init__(self):
         self._query = None
@@ -32,12 +30,6 @@ class CRUD:
         db.refresh(self._query)
         return self._query
 
-    # def update(self, _query):
-    #     self._query = _query
-    #     database = self.db_conn()
-    #     database.add(self._query)
-    #     database.commit()
-    #     database.refresh(self._query)
 
     def get(self):
         pass
@@ -48,8 +40,7 @@ class CRUD:
     def all(self):
         pass
 
-    # def filter(self, model, field, value):
-    #     database = self.db_conn()
-    #     result = database.query(eval(model)).filter(exec(model.eval(".field==value)")))
-    #     print(result)
-    #     return result
+    def filter(self, model, field, value):
+        database = self.db_conn()
+        result = database.query(eval(model)).filter(exec(model.eval(".field==value)")))
+        return result

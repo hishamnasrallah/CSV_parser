@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends
 
-from app.api.v1.repositories.common import CRUD
+from app.api.repositories.common import CRUD
 from core.constants.response_messages import ResponseConstants
+from core.middlewares.logger import logger
 from utils.http_response import http_response
 
 router = APIRouter()
@@ -9,4 +10,5 @@ router = APIRouter()
 
 @router.get('/beat')
 def health_check(db=Depends(CRUD().db_conn)):
+
     return http_response(message=ResponseConstants.RETRIEVED, status=200)

@@ -9,6 +9,7 @@ from core.database.settings.base import Base
 from core.settings.base import settings
 
 from celery.backends.database.session import ResultModelBase
+from app.api.models import *
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
