@@ -17,4 +17,6 @@ class SFTPHelper:
 
     def copy_file_from_server(self, path, tmp_path, file_name):
         self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{file_name}")
-        #client_loop: send disconnect: Broken pipend("sudo cd transfer")
+
+    def close_connection(self):
+        self.client.close()

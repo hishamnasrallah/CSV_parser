@@ -22,6 +22,7 @@ class FileTaskConfigRequest(BaseModel):
 class FieldMapper(BaseModel):
     field_name: str
     map_field_name: str
+    is_ignored: bool
 
 
 class FileTaskConfigBaseResponse(BaseModel):
@@ -50,6 +51,7 @@ class MapperDetail(BaseModel):
     configuration_info: Dashboard
     field_name: str
     map_field_name: str
+    is_ignored: bool
 
 
 class MapperDetailResponse(BaseResponse):
