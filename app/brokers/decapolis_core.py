@@ -24,9 +24,5 @@ class CoreApplicationBroker(Broker):
 
     # POST: /process/process_id/active_process/submit
     def post_collected_data(self, process_id, response_message_key, data, **kwargs):
-        # headers = {
-        #     "Authorization": f"Bearer {token}",
-        # }
-
         url = self.parse_url("process", {process_id}, "active_process", "submit")
         return self.send("POST", url, response_message_key, data=data, timeout=10)
