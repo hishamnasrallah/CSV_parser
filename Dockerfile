@@ -18,7 +18,7 @@ RUN pip install poetry==1 && \
 
 COPY . ./
 
-CMD poetry run alembic upgrade head && \
-    watchfiles   --filter python   'celery -A app.tasks.celery worker --loglevel=info' && \
+# CMD poetry run alembic upgrade head && \
+CMD    watchfiles   --filter python   'celery -A app.tasks.celery worker --loglevel=info' && \
     celery -A app.tasks.celery flower --port=5555 && \
     poetry run uvicorn --host=0.0.0.0 app.main:app
