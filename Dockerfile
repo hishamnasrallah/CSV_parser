@@ -22,9 +22,7 @@ RUN apt-get update && \
 
 COPY pyproject.toml ./
 RUN pip install poetry==1 && \
-    poetry config virtualenvs.in-project true && \
-    pip install -r requirements.txt && \
-#    poetry install --no-dev
+    poetry install --no-dev
 
 COPY . ./
 
