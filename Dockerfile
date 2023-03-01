@@ -21,6 +21,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY pyproject.toml ./
+COPY requirements.txt ./
 RUN pip install poetry==1 && \
     poetry config virtualenvs.in-project true && \
     pip install -r requirements.txt && \
