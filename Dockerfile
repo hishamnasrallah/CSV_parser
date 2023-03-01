@@ -16,6 +16,9 @@ ENV PATH "/root/.poetry/bin:/opt/venv/bin:${PATH}"
 # This could (should?) probably be changed to do a "pip install -r requirements.txt" in order
 # to remain more cacheable, but it really depends on how long your dependencies take to install
 COPY pyproject.toml /opt/project
+RUN ls
+RUN env
+
 RUN python -m venv /opt/venv && \
   source /opt/venv/bin/activate && \
   pip install -U pip && \
