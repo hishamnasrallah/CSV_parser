@@ -21,6 +21,9 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY pyproject.toml ./
+
+COPY . ./
+
 RUN pip install poetry==1 && \
     poetry install --no-dev
 
