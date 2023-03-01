@@ -9,7 +9,7 @@ RUN apk update && \
   postgresql-dev
 
 # Install Poetry & ensure it is in $PATH
-RUN curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | POETRY_PREVIEW=1 python
+RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH "/root/.poetry/bin:/opt/venv/bin:${PATH}"
 
 # Install any dependencies, this step will be cached so long as pyproject.toml is unchanged
