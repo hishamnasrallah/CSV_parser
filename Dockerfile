@@ -9,6 +9,8 @@ RUN apk update && \
   postgresql-dev
 
 # Install Poetry & ensure it is in $PATH
+
+RUN mkdir /opt/project
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH "/root/.poetry/bin:/opt/venv/bin:${PATH}"
 
