@@ -7,7 +7,7 @@ celery = create_celery()
 
 
 @celery.task(name='add new file process task')
-def add_tasks(file_id, file_path, file_name, frequency, company_id, last_run):
+def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, last_run):
     task_id = celery.current_task.request.id
     print(celery.AsyncResult.task_id)
 
@@ -32,7 +32,8 @@ def add_tasks(file_id, file_path, file_name, frequency, company_id, last_run):
 
 
     if time_diff_minutes > frequency or not last_run:
-        csv_helper = CSVHelper(task_id=task_id, company_id=company_id, file_id=file_id, file_name=file_name, file_path=file_path)
+        csv_helper = CSVHelper(task_id=task_id, company_id=company_id, file_id=file_id, file_name=file_name,
+                               file_path=file_path, process_id=process_id)
         x = csv_helper.main()
         if x == "No files":
             return f"NO NEW file with prefix: '{file_name}'"

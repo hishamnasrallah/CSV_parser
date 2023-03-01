@@ -5,7 +5,7 @@ class CoreApplicationBroker(Broker):
     """
     A broker to handle communication with the `decapolis core` application.
     """
-    HOST = "127.0.0.1:8001/api/v1"
+    HOST = "https://dev.app.decapolis.io/api/v2"
 
     def __init__(self, request=None):
         name = "Core Application"
@@ -22,7 +22,11 @@ class CoreApplicationBroker(Broker):
         url = self.parse_url({company_id}, "processes", {process_id})
         return self.send("GET", url, response_message_key, **kwargs, timeout=10)
 
-    # POST: /{company_id}/processes/{process_id}/collected-data
-    def post_collected_data(self, company_id, process_id, response_message_key, data, **kwargs):
-        url = self.parse_url({company_id}, "processes", {process_id}, "collected-data")
+    # POST: /process/process_id/active_process/submit
+    def post_collected_data(self, process_id, response_message_key, data, **kwargs):
+        # headers = {
+        #     "Authorization": f"Bearer {token}",
+        # }
+
+        url = self.parse_url("process", {process_id}, "active_process", "submit")
         return self.send("POST", url, response_message_key, data=data, timeout=10)

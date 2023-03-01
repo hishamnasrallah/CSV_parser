@@ -68,7 +68,8 @@ def init_tasks(db: Session = CRUD().db_conn()):
         company_id = task.company_id
         last_run = task.last_run
         file_id = task.id
-        add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency,
+        process_id = task.process_id
+        add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency, process_id=process_id,
                         company_id=company_id, last_run=last_run)
 
 

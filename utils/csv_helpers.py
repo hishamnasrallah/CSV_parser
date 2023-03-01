@@ -9,7 +9,7 @@ from utils.sftp_server import SFTPHelper
 
 class CSVHelper:
 
-    def __init__(self, task_id, company_id, file_id, file_name, file_path):
+    def __init__(self, task_id, company_id, file_id, file_name, file_path, process_id):
         self.tmp_path = None
         self.file_size = None
         self.file_name_as_received = None
@@ -19,6 +19,7 @@ class CSVHelper:
         self.file_id = file_id
         self.task_id = task_id
         self.task_status = None
+        self.process_id = process_id
 
     def read_files_by_prefix(self, prefix):
         files = []
@@ -96,8 +97,9 @@ class CSVHelper:
         return mapped_data
 
     def send_data(self, company_id, process_id, data):
-        broker = CoreApplicationBroker()
-        broker.post_collected_data(company_id=company_id, process_id=process_id, data=data, response_message_key=201)
+        for _obj in data:
+            broker = CoreApplicationBroker()
+            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
@@ -137,6 +139,6 @@ class CSVHelper:
             self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
             # // TODO: send data to core API one by one using different celery task
 
-            # self.send_data(self.company_id, process_id, mapped_data)
+            self.send_data(self.company_id, self.process_id, mapped_data)
 
             return mapped_data
