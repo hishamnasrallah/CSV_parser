@@ -132,7 +132,7 @@ class CSVHelper:
         try:
             size = os.path.getsize(self.tmp_path + "/" + self.file_name_as_received)
         except:
-            sleep(secs=5)
+            sleep(5)
             self.get_file_info()
 
         self.file_size = size
