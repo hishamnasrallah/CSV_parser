@@ -137,22 +137,23 @@ class CSVHelper:
         self.get_tmp_path()
         self.connect_to_sftp()
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
-        if not new_files_names:
-            self.task_status = "No files"
-            return self.task_status
-        for file_name in new_files_names:
-            self.file_name_as_received = file_name
-
-            self.copy_file_to_tmp_sftp()
-            # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
-            data_headers = self.get_headers()
-            self.get_file_info()
-            mapped_data = self.read_file(file_name=file_name, headers=data_headers)
-
-            self.store_history()
-            self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
-            # // TODO: send data to core API one by one using different celery task
-
-            self.send_data(self.company_id, self.process_id, mapped_data)
-
-            return mapped_data
+        return new_files_names
+        # if not new_files_names:
+        #     self.task_status = "No files"
+        #     return self.task_status
+        # for file_name in new_files_names:
+        #     self.file_name_as_received = file_name
+        #
+        #     self.copy_file_to_tmp_sftp()
+        #     # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
+        #     data_headers = self.get_headers()
+        #     self.get_file_info()
+        #     mapped_data = self.read_file(file_name=file_name, headers=data_headers)
+        #
+        #     self.store_history()
+        #     self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
+        #     # // TODO: send data to core API one by one using different celery task
+        #
+        #     self.send_data(self.company_id, self.process_id, mapped_data)
+        #
+        #     return mapped_data
