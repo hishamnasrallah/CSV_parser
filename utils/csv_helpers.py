@@ -131,7 +131,7 @@ class CSVHelper:
         self.timeout += 1
         # // TODO: timeout
         try:
-            size = os.path.getsize("/" + self.tmp_path + "/" + self.file_name_as_received)
+            size = os.path.getsize("/app" + self.tmp_path + "/" + self.file_name_as_received)
         except:
             if self.timeout <= 50:
                 self.get_file_info()
