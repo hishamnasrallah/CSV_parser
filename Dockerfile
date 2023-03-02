@@ -1,7 +1,7 @@
 FROM python:3.9.10-slim
 ENV PIP_DISABLE_PIP_VERSION_CHECK=on
 RUN pip install poetry
-RUN apt update && apt install supervisor
+RUN apt update && apt install supervisor -y
 WORKDIR /app
 COPY  pyproject.toml /app/
 RUN poetry config virtualenvs.create false
