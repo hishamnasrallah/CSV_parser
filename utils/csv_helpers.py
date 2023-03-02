@@ -80,10 +80,11 @@ class CSVHelper:
         # sftp_helper = SFTPHelper()
         # sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
         # sftp_helper.change_dir(path="transfer/napproai")
-        self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
-                                          file_name=self.file_name_as_received)
+        return True
+        # self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
+        #                                   file_name=self.file_name_as_received)
 
-        self.sftp_helper.close_connection()
+        # self.sftp_helper.close_connection()
 
     def remove_temp_file(self, full_file_path):
         os.unlink(full_file_path)
@@ -144,15 +145,18 @@ class CSVHelper:
             self.file_name_as_received = file_name
 
             self.copy_file_to_tmp_sftp()
-            # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
-            data_headers = self.get_headers()
-            self.get_file_info()
-            mapped_data = self.read_file(file_name=file_name, headers=data_headers)
-
-            self.store_history()
-            self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
-            # // TODO: send data to core API one by one using different celery task
-
-            self.send_data(self.company_id, self.process_id, mapped_data)
-
-            return mapped_data
+            file_info = {"path":self.file_path, "tmp_path":self.tmp_path,
+                                          "file_name":self.file_name_as_received}
+            return file_info
+            # # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
+            # data_headers = self.get_headers()
+            # self.get_file_info()
+            # mapped_data = self.read_file(file_name=file_name, headers=data_headers)
+            #
+            # self.store_history()
+            # self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
+            # # // TODO: send data to core API one by one using different celery task
+            #
+            # self.send_data(self.company_id, self.process_id, mapped_data)
+            #
+            # return mapped_data
