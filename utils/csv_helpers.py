@@ -80,6 +80,9 @@ class CSVHelper:
         # sftp_helper = SFTPHelper()
         # sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
         # sftp_helper.change_dir(path="transfer/napproai")
+
+        cwd = os.getcwd()
+        print(cwd)
         return True
         # self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
         #                                   file_name=self.file_name_as_received)
