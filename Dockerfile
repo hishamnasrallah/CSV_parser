@@ -7,4 +7,5 @@ RUN poetry config virtualenvs.create false
 RUN poetry install --no-interaction
 COPY . /app
 CMD poetry run alembic upgrade head && \
-    poetry run uvicorn --host=0.0.0.0 app.main:app
+    poetry run uvicorn --host=0.0.0.0 app.main:app && \
+    celery -A app.tasks.celery worker --loglevel=info
