@@ -1,6 +1,5 @@
 import logging
 
-from celery import shared_task
 from fastapi_utils.tasks import repeat_every
 import uvicorn
 from fastapi import FastAPI
@@ -12,7 +11,6 @@ from app.api.repositories.common import CRUD
 from app.api.v1.routers import api_router
 from app.tasks import add_tasks
 from sqlalchemy.orm import Session
-from celery_config.celery_utils import create_celery
 from core.middlewares.catch_exception import ExceptionMiddleWare
 
 logger = logging.getLogger(__name__)

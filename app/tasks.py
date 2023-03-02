@@ -1,5 +1,5 @@
 
-from celery_config.celery_utils import create_celery
+from celery.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
 
