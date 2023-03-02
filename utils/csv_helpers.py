@@ -1,8 +1,6 @@
 import csv
 import os
 from time import sleep
-from typing import Type
-
 import paramiko
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.brokers.decapolis_core import CoreApplicationBroker
@@ -50,10 +48,6 @@ class CSVHelper:
                     final_files.append(file)
 
         return final_files
-
-    @property
-    def __class__(self: _T) -> Type[_T]:
-        return super().__class__
 
     def get_headers(self):
 
