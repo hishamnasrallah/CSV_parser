@@ -1,5 +1,5 @@
 import paramiko
-
+import os
 
 class SFTPHelper:
 
@@ -16,7 +16,12 @@ class SFTPHelper:
         self.sftp.chdir(path)
 
     def copy_file_from_server(self, path, tmp_path, file_name):
+        is_exist = os.path.exists(path)
+        if not is_exist:
+            # Create a new directory because it does not exist
+            os.makedirs(tmp_path)
         self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{file_name}")
+
     def read_files_by_prefix_sftp(self, prefix):
         files = []
         for filename in self.sftp.listdir("DcSales"):
