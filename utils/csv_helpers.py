@@ -1,6 +1,5 @@
 import csv
 import os
-from time import sleep
 import paramiko
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.brokers.decapolis_core import CoreApplicationBroker
@@ -20,6 +19,7 @@ class CSVHelper:
         self.task_id = task_id
         self.task_status = None
         self.process_id = process_id
+        self.timeout = 0
 
     def read_files_by_prefix(self, prefix):
         print("no files yet")
@@ -128,13 +128,15 @@ class CSVHelper:
         self.tmp_path = os.path.join(current_dir, sub_folder)
 
     def get_file_info(self):
+        self.timeout += 1
         # // TODO: timeout
         try:
             size = os.path.getsize(self.tmp_path + "/" + self.file_name_as_received)
         except:
-            sleep(5)
-            self.get_file_info()
-
+            if self.timeout <= 50:
+                self.get_file_info()
+            else:
+                pass
         self.file_size = size
 
     def main(self):
