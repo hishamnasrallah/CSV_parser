@@ -30,5 +30,6 @@ class SFTPHelper:
                     files.append(file_name)
                 f.close()
         print("here is the  files:   ")
+        return files
     def close_connection(self):
         self.client.close()
