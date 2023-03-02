@@ -1,6 +1,8 @@
 import csv
 import os
 from time import sleep
+from typing import Type
+
 import paramiko
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.brokers.decapolis_core import CoreApplicationBroker
@@ -28,25 +30,30 @@ class CSVHelper:
         new_files = self.is_new_file(files)
         return new_files
 
-    def read_files_by_prefix_without_sftp(self, prefix):
-        files = []
-        for filename in os.listdir(self.file_path):
-            if filename.startswith(prefix):
-                with open(os.path.join(self.file_path, filename), 'r') as f:
-                    file_name = os.path.basename(f.name)
-                    files.append(file_name)
-                f.close()
-        new_files = self.is_new_file(files)
-        return new_files
+    # def read_files_by_prefix_without_sftp(self, prefix):
+    #     files = []
+    #     for filename in os.listdir(self.file_path):
+    #         if filename.startswith(prefix):
+    #             with open(os.path.join(self.file_path, filename), 'r') as f:
+    #                 file_name = os.path.basename(f.name)
+    #                 files.append(file_name)
+    #             f.close()
+    #     new_files = self.is_new_file(files)
+    #     return new_files
 
     def is_new_file(self, files):
         final_files = []
-        for file in files:
-            history = get_file_history(file_id=self.file_id, file_name=file)
-            if not history.first():
-                final_files.append(file)
+        if files:
+            for file in files:
+                history = get_file_history(file_id=self.file_id, file_name=file)
+                if not history.first():
+                    final_files.append(file)
 
         return final_files
+
+    @property
+    def __class__(self: _T) -> Type[_T]:
+        return super().__class__
 
     def get_headers(self):
 
