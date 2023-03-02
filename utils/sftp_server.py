@@ -17,6 +17,18 @@ class SFTPHelper:
 
     def copy_file_from_server(self, path, tmp_path, file_name):
         self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{file_name}")
-
+    def read_files_by_prefix_sftp(self, prefix):
+        files = []
+        for filename in self.sftp.listdir("DcSales"):
+            print("file name : ", filename)
+            if filename.startswith(prefix):
+                with self.sftp.open(f"DcSales/" + filename) as f:
+                    # with open(sftp.get("DcSales/"+file_name), 'r') as f:
+                    print("file oppened")
+                    # print(f.name)
+                    file_name = filename
+                    files.append(file_name)
+                f.close()
+        print("here is the  files:   ")
     def close_connection(self):
         self.client.close()

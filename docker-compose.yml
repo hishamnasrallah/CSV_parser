@@ -29,10 +29,10 @@ services:
 
   celery:
     build:
-      context: ./celery
+      context: celery_config
     command: celery -A app.worker.celery worker --loglevel=info
     volumes:
-      - ./celery:/app
+      - ./celery_config:/app
     depends_on:
       - db
       - redis

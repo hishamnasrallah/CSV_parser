@@ -22,6 +22,13 @@ class CSVHelper:
         self.process_id = process_id
 
     def read_files_by_prefix(self, prefix):
+        print("no files yet")
+        files = self.sftp_helper.read_files_by_prefix_sftp(prefix)
+
+        new_files = self.is_new_file(files)
+        return new_files
+
+    def read_files_by_prefix_without_sftp(self, prefix):
         files = []
         for filename in os.listdir(self.file_path):
             if filename.startswith(prefix):
@@ -63,14 +70,19 @@ class CSVHelper:
         shutil.copy2(self.file_path + "/" + self.file_name_as_received,
                      self.tmp_path + "/" + self.file_name_as_received)
 
+    def connect_to_sftp(self):
+        self.sftp_helper = SFTPHelper()
+        self.sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
+        self.sftp_helper.change_dir(path="transfer/napproai")
+
     def copy_file_to_tmp_sftp(self):
-        sftp_helper = SFTPHelper()
-        sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
-        sftp_helper.change_dir(path="transfer/napproai")
-        sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
+        # sftp_helper = SFTPHelper()
+        # sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
+        # sftp_helper.change_dir(path="transfer/napproai")
+        self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
                                           file_name=self.file_name_as_received)
 
-        sftp_helper.close_connection()
+        self.sftp_helper.close_connection()
 
     def remove_temp_file(self, full_file_path):
         os.unlink(full_file_path)
@@ -122,6 +134,7 @@ class CSVHelper:
 
     def main(self):
         self.get_tmp_path()
+        self.connect_to_sftp()
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
         if not new_files_names:
             self.task_status = "No files"

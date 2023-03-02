@@ -1,5 +1,5 @@
 
-from celery.celery_utils import create_celery
+from celery_config.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
 
@@ -13,7 +13,7 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
     """
 
     :param file_id: the row id for the mapper configuration
-    :param file_path: file path to using it in the celery function
+    :param file_path: file path to using it in the celery_config function
     :param file_name: file name to use it as prefix name for all files in the real path
     :param frequency: the frequency in minutes
     :param company_id: company id from the core application, and it will be in the token

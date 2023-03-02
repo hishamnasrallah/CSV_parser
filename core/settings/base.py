@@ -94,7 +94,7 @@ class BaseAppSettings(BaseSettings):
     #     DATABASE_CONNECT_DICT: dict = {}
     #
     #     CELERY_BROKER_URL: str = os.environ.get("CELERY_BROKER_URL", str(settings.celery['CELERY_BROKER_URL']))
-    #     CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", str(settings.celery['CELERY_RESULT_BACKEND']))
+    #     CELERY_RESULT_BACKEND: str = os.environ.get("CELERY_RESULT_BACKEND", str(settings.celery_config['CELERY_RESULT_BACKEND']))
 
 
 def validate_database():
