@@ -34,7 +34,7 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
                                file_path=file_path, process_id=process_id)
         x = csv_helper.main()
         if x == "No files":
-            return f"NO NEW file with prefix: '{file_name}'"
+            return f"NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
 
 
         return f"FILE: '{file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
