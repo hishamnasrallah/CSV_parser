@@ -83,7 +83,7 @@ class CSVHelper:
 
         cwd = os.getcwd()
         print(cwd)
-        return True
+        return cwd
         # self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
         #                                   file_name=self.file_name_as_received)
 
@@ -147,9 +147,9 @@ class CSVHelper:
         for file_name in new_files_names:
             self.file_name_as_received = file_name
 
-            self.copy_file_to_tmp_sftp()
+            cwd = self.copy_file_to_tmp_sftp()
             file_info = {"path":self.file_path, "tmp_path":self.tmp_path,
-                                          "file_name":self.file_name_as_received}
+                                          "file_name":self.file_name_as_received, "cwd":cwd}
             return file_info
             # # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
             # data_headers = self.get_headers()
