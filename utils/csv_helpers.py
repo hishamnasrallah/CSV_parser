@@ -6,27 +6,6 @@ from app.brokers.decapolis_core import CoreApplicationBroker
 from utils.sftp_server import SFTPHelper
 
 
-def print_directory_tree(root_dir):
-    for dirpath, dirnames, filenames in os.walk(root_dir):
-        # print the current directory path
-        _tree = []
-        _tree.append(dirpath)
-        # print(dirpath)
-
-        # print all the subdirectories
-        for dirname in dirnames:
-            if dirname not in ["postgres-data", "venv", '.github', '.git', '__pycache__', '.idea']:
-                _tree.append(dirname)
-
-                # print(os.path.join(dirpath, dirname))
-
-        # print all the files in the directory
-        for filename in filenames:
-            _tree.append(filename)
-
-            # print(os.path.join(dirpath, filename))
-
-
 class CSVHelper:
 
     def __init__(self, task_id, company_id, file_id, file_name, file_path, process_id):
@@ -78,14 +57,14 @@ class CSVHelper:
             list_header_fields.append({"column_name": mapper.map_field_name, "is_ignored": mapper.is_ignored})
         return list_header_fields
 
-    def copy_file_to_tmp_dir(self, file_name):
-
-        client = paramiko.SSHClient()
-
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect('4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
-        sftp = client.open_sftp()
-        sftp.get(f"transfer/napproai/{file_name}", f"/home/abdallah/csv_files/{file_name}")
+    # def copy_file_to_tmp_dir(self, file_name):
+    #
+    #     client = paramiko.SSHClient()
+    #
+    #     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    #     client.connect('4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
+    #     sftp = client.open_sftp()
+    #     sftp.get(f"transfer/napproai/{file_name}", f"/home/abdallah/csv_files/{file_name}")
 
     def copy_file_to_tmp_without_sftp(self):
         import shutil
@@ -106,7 +85,7 @@ class CSVHelper:
         # print(cwd)
         # return cwd
         self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
-                                               file_name=self.file_name_as_received)
+                                          file_name=self.file_name_as_received)
 
         self.sftp_helper.close_connection()
 
@@ -137,8 +116,7 @@ class CSVHelper:
     def send_data(self, company_id, process_id, data):
         for _obj in data:
             broker = CoreApplicationBroker()
-            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj,
-                                       response_message_key=201)
+            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
@@ -152,10 +130,8 @@ class CSVHelper:
     def get_file_info(self):
         self.timeout += 1
         # // TODO: timeout
-        x = print_directory_tree(
-            root_dir=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        # size = os.path.getsize("/tmp/" + self.file_name_as_received)
-        self.file_size = x
+        size = os.path.getsize("/tmp/" + self.file_name_as_received)
+        self.file_size = size
         # try:
         #     size = os.path.getsize("/tmp/" + self.file_name_as_received)
         #     self.file_size = size
@@ -170,9 +146,11 @@ class CSVHelper:
         # // TODO: use this function connect_to_sftp nestead of commented it
         self.connect_to_sftp()
 
+
         # // TODO: use this function read_files_by_prefix nestead of read_files_by_prefix_without_sftp
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
         # new_files_names = self.read_files_by_prefix_without_sftp(prefix=self.file_name)
+
 
         if not new_files_names:
             self.task_status = "No files"
@@ -191,8 +169,8 @@ class CSVHelper:
             mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
             self.store_history()
-            # self.remove_temp_file("/tmp/" + self.file_name_as_received)
+            self.remove_temp_file("/tmp/" + self.file_name_as_received)
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
-            return self.file_size
+            return mapped_data
