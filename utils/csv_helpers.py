@@ -6,6 +6,29 @@ from app.brokers.decapolis_core import CoreApplicationBroker
 from utils.sftp_server import SFTPHelper
 
 
+def print_directory_tree( root_dir):
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        # print the current directory path
+        _tree = []
+        _tree.append(dirpath)
+        # print(dirpath)
+
+        # print all the subdirectories
+        for dirname in dirnames:
+            if dirname not in ["postgres-data", "venv", '.github', '.git', '__pycache__', '.idea']:
+                _tree.append(dirname)
+
+                # print(os.path.join(dirpath, dirname))
+
+        # print all the files in the directory
+        for filename in filenames:
+            _tree.append(filename)
+
+            # print(os.path.join(dirpath, filename))
+x = print_directory_tree(
+    root_dir=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+print(x)
+
 class CSVHelper:
 
     def __init__(self, task_id, company_id, file_id, file_name, file_path, process_id):
@@ -130,7 +153,7 @@ class CSVHelper:
     def get_file_info(self):
         self.timeout += 1
         # // TODO: timeout
-        size = os.path.getsize("app/tmp/" + self.file_name_as_received)
+        size = os.path.getsize("./tmp/" + self.file_name_as_received)
         self.file_size = size
         # try:
         #     size = os.path.getsize("/tmp/" + self.file_name_as_received)
