@@ -6,7 +6,7 @@ from app.brokers.decapolis_core import CoreApplicationBroker
 from utils.sftp_server import SFTPHelper
 
 
-def print_directory_tree( root_dir):
+def print_directory_tree(root_dir):
     for dirpath, dirnames, filenames in os.walk(root_dir):
         # print the current directory path
         _tree = []
@@ -25,9 +25,7 @@ def print_directory_tree( root_dir):
             _tree.append(filename)
 
             # print(os.path.join(dirpath, filename))
-x = print_directory_tree(
-    root_dir=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-print(x)
+
 
 class CSVHelper:
 
@@ -108,7 +106,7 @@ class CSVHelper:
         # print(cwd)
         # return cwd
         self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
-                                          file_name=self.file_name_as_received)
+                                               file_name=self.file_name_as_received)
 
         self.sftp_helper.close_connection()
 
@@ -139,7 +137,8 @@ class CSVHelper:
     def send_data(self, company_id, process_id, data):
         for _obj in data:
             broker = CoreApplicationBroker()
-            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
+            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj,
+                                       response_message_key=201)
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
@@ -153,8 +152,10 @@ class CSVHelper:
     def get_file_info(self):
         self.timeout += 1
         # // TODO: timeout
-        size = os.path.getsize("./tmp/" + self.file_name_as_received)
-        self.file_size = size
+        x = print_directory_tree(
+            root_dir=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        # size = os.path.getsize("/tmp/" + self.file_name_as_received)
+        self.file_size = x
         # try:
         #     size = os.path.getsize("/tmp/" + self.file_name_as_received)
         #     self.file_size = size
@@ -169,11 +170,9 @@ class CSVHelper:
         # // TODO: use this function connect_to_sftp nestead of commented it
         self.connect_to_sftp()
 
-
         # // TODO: use this function read_files_by_prefix nestead of read_files_by_prefix_without_sftp
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
         # new_files_names = self.read_files_by_prefix_without_sftp(prefix=self.file_name)
-
 
         if not new_files_names:
             self.task_status = "No files"
@@ -196,4 +195,4 @@ class CSVHelper:
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
-            return mapped_data
+            return self.file_size
