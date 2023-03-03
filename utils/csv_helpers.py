@@ -28,16 +28,16 @@ class CSVHelper:
         new_files = self.is_new_file(files)
         return new_files
 
-    # def read_files_by_prefix_without_sftp(self, prefix):
-    #     files = []
-    #     for filename in os.listdir(self.file_path):
-    #         if filename.startswith(prefix):
-    #             with open(os.path.join(self.file_path, filename), 'r') as f:
-    #                 file_name = os.path.basename(f.name)
-    #                 files.append(file_name)
-    #             f.close()
-    #     new_files = self.is_new_file(files)
-    #     return new_files
+    def read_files_by_prefix_without_sftp(self, prefix):
+        files = []
+        for filename in os.listdir(self.file_path):
+            if filename.startswith(prefix):
+                with open(os.path.join(self.file_path, filename), 'r') as f:
+                    file_name = os.path.basename(f.name)
+                    files.append(file_name)
+                f.close()
+        new_files = self.is_new_file(files)
+        return new_files
 
     def is_new_file(self, files):
         final_files = []
@@ -74,7 +74,7 @@ class CSVHelper:
     def connect_to_sftp(self):
         self.sftp_helper = SFTPHelper()
         self.sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
-        self.sftp_helper.change_dir(path="transfer/napproai")
+        self.sftp_helper.change_dir(path=self.file_path)
 
     def copy_file_to_tmp_sftp(self):
         # sftp_helper = SFTPHelper()
@@ -132,6 +132,7 @@ class CSVHelper:
         # // TODO: timeout
         try:
             size = os.path.getsize("/tmp/" + self.file_name_as_received)
+            self.file_size = size
         except:
             if self.timeout <= 50:
                 self.get_file_info()
@@ -141,15 +142,23 @@ class CSVHelper:
 
     def main(self):
         self.get_tmp_path()
+        # // TODO: use this function connect_to_sftp nestead of commented it
         self.connect_to_sftp()
+
+
+        # // TODO: use this function read_files_by_prefix nestead of read_files_by_prefix_without_sftp
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
+        # new_files_names = self.read_files_by_prefix_without_sftp(prefix=self.file_name)
+
+
         if not new_files_names:
             self.task_status = "No files"
             return self.task_status
         for file_name in new_files_names:
             self.file_name_as_received = file_name
-
+            # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
             self.copy_file_to_tmp_sftp()
+            # self.copy_file_to_tmp_without_sftp()
             # file_info = {"path":self.file_path, "tmp_path":self.tmp_path,
             #                               "file_name":self.file_name_as_received, "cwd":cwd}
             # return file_info
@@ -159,8 +168,7 @@ class CSVHelper:
             mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
             self.store_history()
-            # self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
-            # // TODO: send data to core API one by one using different celery task
+            self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
