@@ -29,7 +29,7 @@ class SFTPHelper:
         for filename in self.sftp.listdir("DcSales"):
             print("file name : ", filename)
             if filename.startswith(prefix):
-                with self.sftp.open(f"DcSales/" + filename) as f:
+                with self.sftp.open(filename) as f:
                     # with open(sftp.get("DcSales/"+file_name), 'r') as f:
                     print("file oppened")
                     # print(f.name)
