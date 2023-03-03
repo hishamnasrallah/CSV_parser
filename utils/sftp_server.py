@@ -26,7 +26,7 @@ class SFTPHelper:
 
     def read_files_by_prefix_sftp(self, prefix):
         files = []
-        for filename in self.sftp.listdir("DcSales"):
+        for filename in self.sftp.listdir():
             print("file name : ", filename)
             if filename.startswith(prefix):
                 with self.sftp.open(filename) as f:
