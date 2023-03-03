@@ -18,10 +18,10 @@ class SFTPHelper:
     def copy_file_from_server(self, path, tmp_path, file_name):
         # os.makedirs(tmp_path, exist_ok=True)
         try:
-            self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{file_name}")
+            self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{tmp_path}/{file_name}")
         except:
             x = {"path": path, "tmp_path": tmp_path, "file_name": file_name}
-            raise x
+            print(x)
 
 
     def read_files_by_prefix_sftp(self, prefix):
