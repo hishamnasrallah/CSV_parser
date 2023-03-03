@@ -18,7 +18,7 @@ class SFTPHelper:
     def copy_file_from_server(self, path, tmp_path, file_name):
         os.makedirs(tmp_path, exist_ok=True)
 
-        self.sftp.get(f"{path}/{file_name}", f"{tmp_path}/{file_name}")
+        self.sftp.get(f"{path}/{file_name}", f"{file_name}")
 
     def read_files_by_prefix_sftp(self, prefix):
         files = []
