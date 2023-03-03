@@ -93,7 +93,7 @@ class CSVHelper:
         os.unlink(full_file_path)
 
     def read_file(self, file_name=None, headers=None):
-        with open(f"{self.tmp_path}/{file_name}", "r") as file:
+        with open(f"/tmp/{file_name}", "r") as file:
 
             keys = headers
             headers = []
