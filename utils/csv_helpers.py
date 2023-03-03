@@ -130,15 +130,16 @@ class CSVHelper:
     def get_file_info(self):
         self.timeout += 1
         # // TODO: timeout
-        try:
-            size = os.path.getsize("/tmp/" + self.file_name_as_received)
-            self.file_size = size
-        except:
-            if self.timeout <= 50:
-                self.get_file_info()
-            else:
-                pass
+        size = os.path.getsize("/tmp/" + self.file_name_as_received)
         self.file_size = size
+        # try:
+        #     size = os.path.getsize("/tmp/" + self.file_name_as_received)
+        #     self.file_size = size
+        # except:
+        #     if self.timeout <= 50:
+        #         self.get_file_info()
+        #     else:
+        #         pass
 
     def main(self):
         self.get_tmp_path()
