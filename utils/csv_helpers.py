@@ -168,7 +168,7 @@ class CSVHelper:
             mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
             self.store_history()
-            self.remove_temp_file(self.tmp_path + "/" + self.file_name_as_received)
+            self.remove_temp_file("/tmp/" + self.file_name_as_received)
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
