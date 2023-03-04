@@ -8,20 +8,24 @@ class SFTPHelper:
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.sftp = None
 
-    def connect(self, server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$'):
-        self.client.connect(server_ip, username=username, password=password)
+    # def connect(self, server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$'):
+    def connect(self, server_ip='10.60.22.157', port='2222', username='decapolis', password='ka%Y5#sGt$'):
+        self.client.connect(server_ip, port=port, username=username, password=password)
+        # self.client.connect('10.60.22.157', port='2222', username='decapolis', password='ka%Y5#sGt$')
+
         self.sftp = self.client.open_sftp()
 
     def change_dir(self, path="transfer/napproai"):
         self.sftp.chdir(path)
 
     def copy_file_from_server(self, path, tmp_path, file_name):
-        # os.makedirs(tmp_path, exist_ok=True)
+        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        os.makedirs(f'{current_dir}/tmp', exist_ok=True)
+
         try:
-            self.sftp.get(f"{path}/{file_name}", f"/tmp/{file_name}")
-        except:
-            x = {"path": path, "tmp_path": tmp_path, "file_name": file_name}
-            print(x)
+            self.sftp.get(f"{file_name}", f"{current_dir}/tmp/{file_name}")
+        finally:
+            self.close_connection()
 
 
     def read_files_by_prefix_sftp(self, prefix):
@@ -39,4 +43,5 @@ class SFTPHelper:
         print("here is the  files:   ")
         return files
     def close_connection(self):
+        self.sftp.close()
         self.client.close()
