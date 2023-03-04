@@ -2,7 +2,7 @@ import csv
 import os
 import paramiko
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
-from app.brokers.decapolis_core import CoreApplicationBroker
+from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
 from utils.sftp_server import SFTPHelper
 
 
@@ -116,8 +116,9 @@ class CSVHelper:
 
     def send_data(self, company_id, process_id, data):
         for _obj in data:
-            broker = CoreApplicationBroker()
-            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
+            # broker = CoreApplicationBroker()
+            # broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
+            send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
 
 
     def store_history(self):
