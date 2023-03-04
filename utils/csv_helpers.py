@@ -94,7 +94,7 @@ class CSVHelper:
         os.unlink(full_file_path)
 
     def read_file(self, file_name=None, headers=None):
-        with open(f"/tmp/{file_name}", "r") as file:
+        with open(f"{self.current_dir}/tmp/{file_name}", "r") as file:
 
             keys = headers
             headers = []
@@ -170,7 +170,7 @@ class CSVHelper:
             mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
             self.store_history()
-            self.remove_temp_file("/tmp/" + self.file_name_as_received)
+            self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
