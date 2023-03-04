@@ -117,7 +117,11 @@ class CSVHelper:
     def send_data(self, company_id, process_id, data):
         for _obj in data:
             broker = CoreApplicationBroker()
-            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
+            try:
+                #// TODO: handle submit request
+                broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
+            except:
+                pass
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
