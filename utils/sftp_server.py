@@ -8,10 +8,10 @@ class SFTPHelper:
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.sftp = None
 
-    # def connect(self, server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$'):
-    def connect(self, server_ip='10.60.22.157', port='2222', username='decapolis', password='ka%Y5#sGt$'):
-        self.client.connect(server_ip, port=port, username=username, password=password)
-        # self.client.connect('10.60.22.157', port='2222', username='decapolis', password='ka%Y5#sGt$')
+    def connect(self, server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$'):
+    # def connect(self, server_ip='10.60.22.157', port='2222', username='decapolis', password='ka%Y5#sGt$'):
+        self.client.connect(server_ip, username=username, password=password)
+        # self.client.connect(server_ip, port=port, username=username, password=password)
 
         self.sftp = self.client.open_sftp()
 
