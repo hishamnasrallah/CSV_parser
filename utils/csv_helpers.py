@@ -20,6 +20,7 @@ class CSVHelper:
         self.task_status = None
         self.process_id = process_id
         self.timeout = 0
+        self.current_dir = None
 
     def read_files_by_prefix(self, prefix):
         print("no files yet")
@@ -123,14 +124,14 @@ class CSVHelper:
         update_last_run(self.file_id)
 
     def get_tmp_path(self):
-        current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        self.current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         sub_folder = "tmp"
-        self.tmp_path = os.path.join(current_dir, sub_folder)
+        self.tmp_path = os.path.join(self.current_dir, sub_folder)
 
     def get_file_info(self):
         self.timeout += 1
         # // TODO: timeout
-        size = os.path.getsize("/tmp/" + self.file_name_as_received)
+        size = os.path.getsize(f"{self.current_dir}/tmp/" + self.file_name_as_received)
         self.file_size = size
         # try:
         #     size = os.path.getsize("/tmp/" + self.file_name_as_received)
