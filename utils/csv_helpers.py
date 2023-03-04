@@ -178,4 +178,4 @@ class CSVHelper:
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
-            return mapped_data
+            return mapped_data[3]
