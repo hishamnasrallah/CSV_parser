@@ -34,7 +34,7 @@ class CoreApplicationBroker(Broker):
 
 
 def send_collected_data(company_id, process_id, data):
-    url = "https://dev.app.decapolis.io/api/v2/process/1/active_process/submit"
+    url = "http://dev.app.decapolis.io/api/v2/process/1/active_process/submit"
     payload = {"process_id": process_id, "data": data}
     headers = {
         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjgwNTE5MTI1LCJqdGkiOiJiNTFiZWFhZTgzZTA0YTY5OTcyYzEzMGQ3NWU4MDcxNCIsInVzZXJfaWQiOjEyOCwidXNlcl9mdWxsX25hbWUiOiIiLCJjb21wYW55Ijp7ImlkIjoxMjEsIm5hbWUiOiJEZWxtb250ZSIsImxvZ28iOm51bGwsInVzZXIiOnsiaXNfc3RhZmYiOmZhbHNlfSwidXNlX3ByZV9wcmludGVkX2xhYmVscyI6dHJ1ZSwidXNlX21hbnVhbF9xcmNvZGVfcHJpbnRpbmciOnRydWV9fQ.lCk5RQpzftquMGpLJ2ra_nGXEhu2Mg88iNugctXpEts'
