@@ -117,11 +117,8 @@ class CSVHelper:
     def send_data(self, company_id, process_id, data):
         for _obj in data:
             broker = CoreApplicationBroker()
-            try:
-                #// TODO: handle submit request
-                broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
-            except:
-                pass
+            broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
+
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
@@ -137,14 +134,14 @@ class CSVHelper:
         # // TODO: timeout
         size = os.path.getsize(f"{self.current_dir}/tmp/" + self.file_name_as_received)
         self.file_size = size
-        # try:
-        #     size = os.path.getsize("/tmp/" + self.file_name_as_received)
-        #     self.file_size = size
-        # except:
-        #     if self.timeout <= 50:
-        #         self.get_file_info()
-        #     else:
-        #         pass
+        try:
+            size = os.path.getsize(f"{self.current_dir}/tmp/" + self.file_name_as_received)
+            self.file_size = size
+        except:
+            if self.timeout <= 30:
+                self.get_file_info()
+            else:
+                pass
 
     def main(self):
         self.get_tmp_path()
@@ -178,4 +175,4 @@ class CSVHelper:
 
             self.send_data(self.company_id, self.process_id, mapped_data)
 
-            return mapped_data[3]
+            return mapped_data
