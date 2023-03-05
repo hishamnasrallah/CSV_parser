@@ -6,8 +6,6 @@ import os
 
 
 class AWSConfig:
-    # AWS_ACCESS_KEY = os.environ.get('AWS_ACCESS_KEY', 'YOUR_ACCESS_TOKEN')
-    # AWS_SECRET_KEY = os.environ.get('AWS_SECRET_KEY', 'YOUR_SECRET_TOKEN')
     AWS_REGION_NAME = os.environ.get('AWS_REGION_NAME', 'eu-central-1')
 
 
@@ -16,8 +14,6 @@ class AWSSecretManger(object):
         self._session = boto3.session.Session()
         self.client = self._session.client(
             service_name='secretsmanager',
-            # aws_access_key_id=AWSConfig.AWS_ACCESS_KEY,
-            # aws_secret_access_key=AWSConfig.AWS_SECRET_KEY,
             region_name=AWSConfig.AWS_REGION_NAME
         )
     # Use this code snippet in your app.

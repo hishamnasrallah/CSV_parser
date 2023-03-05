@@ -8,7 +8,6 @@ from pydantic import PostgresDsn, SecretStr
 from core.logging import InterceptHandler
 
 
-# class AppSettings(BaseAppSettings):
 class AppSettings:
     debug: bool = False
     docs_url: str = "/docs"

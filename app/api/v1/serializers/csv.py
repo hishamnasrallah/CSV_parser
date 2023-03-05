@@ -11,18 +11,18 @@ class FileTaskConfig(BaseModel):
     file_path: str
 
 
-class FileTaskConfigRequest(BaseModel):
-    mapper: dict
-    file_name: str
-    frequency: Frequency
-    file_path: str
-    process_id: int
-
-
 class FieldMapper(BaseModel):
     field_name: str
     map_field_name: str
     is_ignored: bool
+
+
+class FileTaskConfigRequest(BaseModel):
+    mapper: List[FieldMapper]
+    file_name: str
+    frequency: Frequency
+    file_path: str
+    process_id: int
 
 
 class FileTaskConfigBaseResponse(BaseModel):

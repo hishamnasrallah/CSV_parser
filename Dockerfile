@@ -1,22 +1,11 @@
 FROM python:3.9.10-slim
-
-ENV PYTHONUNBUFFERED 1
-
-EXPOSE 8000
+ENV PIP_DISABLE_PIP_VERSION_CHECK=on
+RUN pip install poetry
+RUN apt update && apt install supervisor -y
 WORKDIR /app
-
-RUN apt-get update && apt-get -y install libpq-dev gcc && pip install psycopg2
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends netcat && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-COPY pyproject.toml ./
-RUN pip install poetry==1 && \
-    poetry config virtualenvs.in-project true && \
-    poetry install --no-dev
-
-COPY . ./
-
-CMD poetry run alembic upgrade head && \
-    poetry run uvicorn --host=0.0.0.0 app.main:app
+COPY  pyproject.toml /app/
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-interaction
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY . /app
+CMD ["/usr/bin/supervisord"]

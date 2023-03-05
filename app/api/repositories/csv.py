@@ -18,7 +18,7 @@ def mappers_configs(token, db):
     :return: it will return all mapping configurations for the specific company
     """
 
-    configs = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company_id"]).all()
+    configs = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"]).all()
     jsonable_encoder(configs)
     return jsonable_encoder(configs)
 
@@ -31,7 +31,7 @@ def mapper_details(token, id, db):
     :param db: is the database connection
     :return: the specfic mapper configuration details with field mapping
     """
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company_id"], ProcessConfig.id==id).first()
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"], ProcessConfig.id==id).first()
     mapper_fields = db.query(ProcessMapField).filter(ProcessMapField.file_id == id).all()
     mapper_config = jsonable_encoder(mapper_config)
     mapper_config["mapper_fields"] = jsonable_encoder(mapper_fields)
@@ -58,7 +58,7 @@ def delete_config(id, token, db):
     :param db: the database connection
     :return: nothing
     """
-    config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == token["company_id"])
+    config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == token["company"]["id"])
     if not config.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CSVConfigDoesNotExist().message_key)
     else:
@@ -98,7 +98,7 @@ def get_company_processes(token, request):
     :param request: request as received to use it in the broker
     :return: the response from the broker that call an api from the core application
     """
-    company_id = token["company_id"]
+    company_id = token["company"]["id"]
     broker = CoreApplicationBroker(request)
     response = broker.get_company_processes(company_id=company_id, response_message_key=200)
     jsonable_encoder(response)
@@ -138,7 +138,7 @@ def create_config(request_body, token, db):
     :return: new configuration
     """
     request_dict = request_body.dict()
-    request_dict["company_id"] = token["company_id"]
+    request_dict["company_id"] = token["company"]["id"]
     try:
         mapper = request_dict.pop("mapper", None)
         rec = ProcessConfig(**request_dict)
@@ -146,8 +146,11 @@ def create_config(request_body, token, db):
         file_id = file_config_rec.id
         response = jsonable_encoder(file_config_rec)
         mappers = []
-        for key, value in mapper.items():
-            map_rec = ProcessMapField(file_id=file_id, field_name=key, map_field_name=value)
+        for item in mapper:
+
+            map_rec = ProcessMapField(file_id=file_id, field_name=item.field_name,
+                                      map_field_name=item.map_field_name,
+                                      is_ignored=item.is_ignored)
             stored_map_rec = CRUD().add(map_rec)
             mappers.append(jsonable_encoder(stored_map_rec))
 
