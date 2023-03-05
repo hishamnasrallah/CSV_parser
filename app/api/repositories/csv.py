@@ -146,8 +146,11 @@ def create_config(request_body, token, db):
         file_id = file_config_rec.id
         response = jsonable_encoder(file_config_rec)
         mappers = []
-        for key, value in mapper.items():
-            map_rec = ProcessMapField(file_id=file_id, field_name=key, map_field_name=value)
+        for item in mapper:
+
+            map_rec = ProcessMapField(file_id=file_id, field_name=item.field_name,
+                                      map_field_name=item.map_field_name,
+                                      is_ignored=item.is_ignored)
             stored_map_rec = CRUD().add(map_rec)
             mappers.append(jsonable_encoder(stored_map_rec))
 
