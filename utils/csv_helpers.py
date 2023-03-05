@@ -57,15 +57,6 @@ class CSVHelper:
             list_header_fields.append({"column_name": mapper.map_field_name, "is_ignored": mapper.is_ignored})
         return list_header_fields
 
-    # def copy_file_to_tmp_dir(self, file_name):
-    #
-    #     client = paramiko.SSHClient()
-    #
-    #     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    #     client.connect('4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
-    #     sftp = client.open_sftp()
-    #     sftp.get(f"transfer/napproai/{file_name}", f"/home/abdallah/csv_files/{file_name}")
-
     def copy_file_to_tmp_without_sftp(self):
         import shutil
         shutil.copy2(self.file_path + "/" + self.file_name_as_received,
@@ -73,7 +64,9 @@ class CSVHelper:
 
     def connect_to_sftp(self):
         self.sftp_helper = SFTPHelper()
-        self.sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
+        self.sftp_helper.connect(server_ip=os.environ.get("DELMONTE_SFTP_IP"),
+                                 username=os.environ.get("DELMONTE_SFTP_USERNAME"),
+                                 password=os.environ.get("DELMONTE_SFTP_USERNAME"))
         self.sftp_helper.change_dir(path=self.file_path)
 
     def copy_file_to_tmp_sftp(self):
@@ -108,8 +101,6 @@ class CSVHelper:
 
     def send_data(self, company_id, process_id, data):
         for _obj in data:
-            # broker = CoreApplicationBroker()
-            # broker.post_collected_data(company_id=company_id, process_id=process_id, data=_obj, response_message_key=201)
             send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
 
 
@@ -144,7 +135,6 @@ class CSVHelper:
 
         # // TODO: use this function read_files_by_prefix nestead of read_files_by_prefix_without_sftp
         new_files_names = self.read_files_by_prefix(prefix=self.file_name)
-        # new_files_names = self.read_files_by_prefix_without_sftp(prefix=self.file_name)
 
 
         if not new_files_names:
@@ -154,10 +144,6 @@ class CSVHelper:
             self.file_name_as_received = file_name
             # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
             self.copy_file_to_tmp_sftp()
-            # self.copy_file_to_tmp_without_sftp()
-            # file_info = {"path":self.file_path, "tmp_path":self.tmp_path,
-            #                               "file_name":self.file_name_as_received, "cwd":cwd}
-            # return file_info
             # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
             data_headers = self.get_headers()
             self.get_file_info()
