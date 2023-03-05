@@ -11,7 +11,7 @@ class SFTPHelper:
     def connect(self, server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$'):
     # def connect(self, server_ip='10.60.22.157', port='2222', username='decapolis', password='ka%Y5#sGt$'):
         self.client.connect(server_ip, username=username, password=password)
-        # self.client.connect(server_ip, port=port, username=username, password=password)
+        # self.client.connect('10.60.22.157', port=2222, username=username, password=password)
 
         self.sftp = self.client.open_sftp()
 
@@ -31,17 +31,13 @@ class SFTPHelper:
     def read_files_by_prefix_sftp(self, prefix):
         files = []
         for filename in self.sftp.listdir():
-            print("file name : ", filename)
             if filename.startswith(prefix):
                 with self.sftp.open(filename) as f:
-                    # with open(sftp.get("DcSales/"+file_name), 'r') as f:
-                    print("file oppened")
-                    # print(f.name)
                     file_name = filename
                     files.append(file_name)
                 f.close()
-        print("here is the  files:   ")
         return files
+
     def close_connection(self):
         self.sftp.close()
         self.client.close()

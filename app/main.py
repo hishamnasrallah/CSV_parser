@@ -4,7 +4,6 @@ from fastapi_utils.tasks import repeat_every
 import uvicorn
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
-# from starlette.middleware.cors import CORSMiddleware
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.models import ProcessConfig
 from app.api.repositories.common import CRUD
@@ -15,12 +14,11 @@ from core.middlewares.catch_exception import ExceptionMiddleWare
 
 logger = logging.getLogger(__name__)
 logger.level = logging.INFO
-# logger.info("echoing something from the uicheckapp logger")
+logger.info("echoing something from the uicheckapp logger")
 
 app = FastAPI(title="Parser", docs_url="/parser/docs",
               openapi_url="/parser/openapi.json")
-# app.celery_app = create_celery()
-# celery = app.celery_app
+
 
 # CORS
 origins = ["*"]
@@ -67,7 +65,7 @@ def init_tasks(db: Session = CRUD().db_conn()):
         last_run = task.last_run
         file_id = task.id
         process_id = task.process_id
-        add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency, process_id=process_id,
+        add_tasks.deploy(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency, process_id=process_id,
                         company_id=company_id, last_run=last_run)
 
 

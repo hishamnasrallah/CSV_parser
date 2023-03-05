@@ -23,7 +23,6 @@ class CSVHelper:
         self.current_dir = None
 
     def read_files_by_prefix(self, prefix):
-        print("no files yet")
         files = self.sftp_helper.read_files_by_prefix_sftp(prefix)
 
         new_files = self.is_new_file(files)
@@ -78,13 +77,6 @@ class CSVHelper:
         self.sftp_helper.change_dir(path=self.file_path)
 
     def copy_file_to_tmp_sftp(self):
-        # sftp_helper = SFTPHelper()
-        # sftp_helper.connect(server_ip='4.79.195.29', username='decapolis', password='ka%Y5#sGt$')
-        # sftp_helper.change_dir(path="transfer/napproai")
-
-        # cwd = os.getcwd()
-        # print(cwd)
-        # return cwd
         self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
                                           file_name=self.file_name_as_received)
 
