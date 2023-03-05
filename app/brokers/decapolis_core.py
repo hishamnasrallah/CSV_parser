@@ -1,12 +1,12 @@
 from app.brokers.base import Broker
 import requests
-
+import os
 
 class CoreApplicationBroker(Broker):
     """
     A broker to handle communication with the `decapolis core` application.
     """
-    HOST = "https://dev.app.decapolis.io/api/v2"
+    HOST = os.environ.get('CORE_ENDPOINT')
 
     def __init__(self, request=None):
         name = "Core Application"
@@ -34,8 +34,7 @@ class CoreApplicationBroker(Broker):
 
 
 def send_collected_data(company_id, process_id, data):
-    url = f"http://backend-app:8000//api/v2/process/{process_id}/active_process/submit"
-    # url = f"https://dev.app.decapolis.io/api/v2/process/{process_id}/active_process/submit"
+    url = f"process/{process_id}/active_process/submit"
     headers = {
         'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjgwNTE5MTI1LCJqdGkiOiJiNTFiZWFhZTgzZTA0YTY5OTcyYzEzMGQ3NWU4MDcxNCIsInVzZXJfaWQiOjEyOCwidXNlcl9mdWxsX25hbWUiOiIiLCJjb21wYW55Ijp7ImlkIjoxMjEsIm5hbWUiOiJEZWxtb250ZSIsImxvZ28iOm51bGwsInVzZXIiOnsiaXNfc3RhZmYiOmZhbHNlfSwidXNlX3ByZV9wcmludGVkX2xhYmVscyI6dHJ1ZSwidXNlX21hbnVhbF9xcmNvZGVfcHJpbnRpbmciOnRydWV9fQ.lCk5RQpzftquMGpLJ2ra_nGXEhu2Mg88iNugctXpEts'
     }
