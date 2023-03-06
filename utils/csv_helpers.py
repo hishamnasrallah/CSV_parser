@@ -66,7 +66,7 @@ class CSVHelper:
         self.sftp_helper = SFTPHelper()
         self.sftp_helper.connect(server_ip=os.environ.get("DELMONTE_SFTP_IP"),
                                  username=os.environ.get("DELMONTE_SFTP_USERNAME"),
-                                 password=os.environ.get("DELMONTE_SFTP_USERNAME"))
+                                 password=os.environ.get("DELMONTE_SFTP_PASSWORD"))
         self.sftp_helper.change_dir(path=self.file_path)
 
     def copy_file_to_tmp_sftp(self):
