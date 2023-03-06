@@ -9,7 +9,7 @@ class CoreApplicationBroker(Broker):
     """
     A broker to handle communication with the `decapolis core` application.
     """
-    HOST = os.environ.get('CORE_ENDPOINT')
+    HOST = os.environ.get('PRIVATE_CORE_ENDPOINT')
 
     def __init__(self, request=None):
         name = "Core Application"
@@ -28,9 +28,6 @@ class CoreApplicationBroker(Broker):
 
 
 def send_collected_data(company_id, process_id, data):
-    url = f"process/{process_id}/active_process/submit"
-    headers = {
-        'Authorization': f'Bearer {SFTP_TOKEN}'
-    }
-    response = requests.request("POST", url, headers=headers, data=data)
+    url = f"process/{process_id}/company/{company_id}/active_process/submit"
+    response = requests.request("POST", url, data=data)
     return response
