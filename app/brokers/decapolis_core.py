@@ -28,6 +28,7 @@ class CoreApplicationBroker(Broker):
 
 
 def send_collected_data(company_id, process_id, data):
-    url = f"process/{process_id}/company/{company_id}/active_process/submit"
+    host = os.environ.get('PRIVATE_CORE_ENDPOINT')
+    url = f"{host}process/{process_id}/company/{company_id}/active_process/submit"
     response = requests.request("POST", url, data=data)
     return response
