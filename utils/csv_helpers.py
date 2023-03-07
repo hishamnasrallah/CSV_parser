@@ -103,7 +103,8 @@ class CSVHelper:
         responses = []
         for _obj in data:
             response = send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
-            responses.append(response.content)
+            responses.append(response.json())
+
         return responses
 
 
