@@ -100,10 +100,11 @@ class CSVHelper:
         return mapped_data
 
     def send_data(self, company_id, process_id, data):
-        response = []
+        responses = []
         for _obj in data:
-            response.append(send_collected_data(company_id=company_id, process_id=process_id, data=_obj))
-        return response
+            response = send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
+            responses.append(response.content)
+        return responses
 
 
     def store_history(self):
