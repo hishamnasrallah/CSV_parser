@@ -30,7 +30,7 @@ class CoreApplicationBroker(Broker):
 def send_collected_data(company_id, process_id, data):
     host = os.environ.get('PRIVATE_CORE_ENDPOINT')
     headers = {
-        "Host": "parser"
+        "Host": "parser-dev.decapolis.io"
     }
     url = f"http://dev-app-private.decapolis.io/api/v2/process/{process_id}/company/{company_id}/active_process/submit"
     response = requests.request("POST", url, headers=headers, data=data)
