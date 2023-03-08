@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/mappers", response_model=FileTaskConfigResponse)
+@router.post("/mappers/", response_model=FileTaskConfigResponse)
 def create_new_file_process(request: Request, request_body: FileTaskConfigRequest,
                             token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
