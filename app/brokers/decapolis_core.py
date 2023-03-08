@@ -32,6 +32,8 @@ def send_collected_data(company_id, process_id, data):
     headers = {
         "Host": None
     }
-    url = f"http://dev-app-private.decapolis.io/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+    url = f"http://backend-app-private:8000/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+
+
     response = requests.request("POST", url, headers=headers, data=data)
     return response
