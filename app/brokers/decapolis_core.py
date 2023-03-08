@@ -30,7 +30,7 @@ class CoreApplicationBroker(Broker):
 def send_collected_data(company_id, process_id, data):
     host = os.environ.get('PRIVATE_CORE_ENDPOINT')
     headers = {
-        "Host": None
+        "Host": "parser:8000"
     }
     url = f"http://backend-app-private:8000/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
 
