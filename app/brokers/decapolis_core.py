@@ -32,6 +32,6 @@ def send_collected_data(company_id, process_id, data):
     # headers = {
     #     "Host": "parser-dev.decapolis.io"
     # }
-    url = f"http://dev-app-private.decapolis.io/api/v2/process/{process_id}/company/{company_id}/active_process/submit"
+    url = f"https://dev.app.decapolis.io/api/v2/process/{process_id}/company/{company_id}/active_process/submit"
     response = requests.request("POST", url, data=data)
     return response
