@@ -138,26 +138,17 @@ def update_config(request_body, id, token, db):
     """
     request_dict = request_body.dict()
     request_dict["company_id"] = token["company"]["id"]
-
     mapper = request_dict.pop("mapper", None)
-    mapper_config = db.query(ProcessConfig).filter(id == id)
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id)
     mapper_config_obj = mapper_config.first()
     for key, value in request_dict.items():
         setattr(mapper_config_obj, key, value)
     db.commit()
 
     response = jsonable_encoder(mapper_config_obj)
-    print("before mapper objs query ")
-
     mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
-    print("before delete mapper objs query ")
-
     mapper_objs.delete(synchronize_session=False)
-    print("after delete mapper objs query ")
-
     db.commit()
-    print("before second for loop ")
-
     mappers = []
     for item in mapper:
         map_rec = ProcessMapField(file_id=id, field_name=item.field_name,
@@ -165,11 +156,7 @@ def update_config(request_body, id, token, db):
                                   is_ignored=item.is_ignored)
         stored_map_rec = CRUD().add(map_rec)
         mappers.append(jsonable_encoder(stored_map_rec))
-    print("after first for loop ")
-
     response["mapper"] = mappers
-    print("after response['mapper'] = mappers")
-
     return response
 
 
