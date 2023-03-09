@@ -7,7 +7,7 @@ from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
 from app.api.repositories.common import CRUD
 from app.api.v1.serializers.csv import MapperDetail
 from app.brokers.decapolis_core import CoreApplicationBroker
-from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig
+from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig
 
 
 def mappers_configs(token, db):
@@ -129,6 +129,43 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
         return stored_data
 
 
+def update_config(request_body, id, token, db):
+    """
+
+    :param request_body: the data that sent to the api as json
+    :param token: to extract company_id from it
+    :return: new configuration
+    """
+    request_dict = request_body.dict()
+    request_dict["company_id"] = token["company"]["id"]
+
+    mapper = request_dict.pop("mapper", None)
+    mapper_config_obj = db.query(ProcessConfig).filter(id == id)
+    stored_data = jsonable_encoder(mapper_config_obj.first())
+
+    new_data = request_dict
+    for i in new_data:
+        if new_data[i] is not None:
+            stored_data[i] = new_data[i]
+    mapper_config_obj.update(stored_data)
+    db.commit()
+    response = jsonable_encoder(mapper_config_obj.first())
+
+    mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
+    mapper_objs.delete(synchronize_session=False)
+    db.commit()
+
+    mappers = []
+    for item in mapper:
+        map_rec = ProcessMapField(file_id=id, field_name=item.field_name,
+                                  map_field_name=item.map_field_name,
+                                  is_ignored=item.is_ignored)
+        stored_map_rec = CRUD().add(map_rec)
+        mappers.append(jsonable_encoder(stored_map_rec))
+    response["mapper"] = mappers
+
+    return response
+
 
 def create_config(request_body, token, db):
     """
@@ -161,6 +198,8 @@ def create_config(request_body, token, db):
         print(f" \n <====== Exception =====> : \n {str(traceback.format_exc())} \n <==== End Exception ===>  \n")
         print(str(e))
         raise FailedCreateNewFileTaskConfig
+
+
 
 
 def upload_CSV(request):

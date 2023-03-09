@@ -29,3 +29,8 @@ class CSVConstants:
         "en": "Creation failed",
         "ar": "فشل في انشاء سجل جديد"
     }
+
+    FAILED_UPDATE_FILE_TASK_CONFIG = {
+        "en": "Update failed",
+        "ar": "فشل في التعديل"
+    }

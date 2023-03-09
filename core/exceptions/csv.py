@@ -24,6 +24,13 @@ class FailedCreateNewFileTaskConfig(Exception):
 
         super().__init__(self.message_key, self.status)
 
+class FailedToUpdateFileTaskConfig(Exception):
+    def __init__(self, message_key=CSVConstants.FAILED_UPDATE_FILE_TASK_CONFIG):
+        self.message_key = message_key
+        self.status = 401
+
+        super().__init__(self.message_key, self.status)
+
 class InvalidAuthentication(Exception):
     def __init__(self, message_key=CSVConstants.INVALID_AUTHENTICATION):
         self.message_key = message_key

@@ -25,6 +25,16 @@ def create_new_file_process(request: Request, request_body: FileTaskConfigReques
                          message=ResponseConstants.CREATED_MSG)
 
 
+@router.put("/mappers/{id}/", response_model=FileTaskConfigResponse)
+def create_new_file_process(request: Request, id:int,  request_body: FileTaskConfigRequest,
+                            token=Depends(validate_authorization),
+                            db: Session = Depends(CRUD().db_conn)):
+
+    data = csv.update_config(request_body, id, token, db)
+    return http_response(data=data, status=status.HTTP_201_CREATED,
+                         message=ResponseConstants.CREATED_MSG)
+
+
 @router.get("/mappers", response_model=DashboardResponse)
 def get_mappers_configs(request: Request, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
