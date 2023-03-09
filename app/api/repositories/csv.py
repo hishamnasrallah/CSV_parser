@@ -7,7 +7,8 @@ from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
 from app.api.repositories.common import CRUD
 from app.api.v1.serializers.csv import MapperDetail
 from app.brokers.decapolis_core import CoreApplicationBroker
-from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig
+from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
+    CSVConfigMapperFieldsDoesNotExist
 
 
 def mappers_configs(token, db):
@@ -31,8 +32,14 @@ def mapper_details(token, id, db):
     :param db: is the database connection
     :return: the specfic mapper configuration details with field mapping
     """
+
     mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"], ProcessConfig.id==id).first()
+    if not mapper_config:
+        raise CSVConfigDoesNotExist
+
     mapper_fields = db.query(ProcessMapField).filter(ProcessMapField.file_id == id).all()
+    if not mapper_config:
+        raise CSVConfigMapperFieldsDoesNotExist
     mapper_config = jsonable_encoder(mapper_config)
     mapper_config["mapper_fields"] = jsonable_encoder(mapper_fields)
     return jsonable_encoder(mapper_config)
@@ -136,28 +143,31 @@ def update_config(request_body, id, token, db):
     :param token: to extract company_id from it
     :return: new configuration
     """
-    request_dict = request_body.dict()
-    request_dict["company_id"] = token["company"]["id"]
-    mapper = request_dict.pop("mapper", None)
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id)
-    mapper_config_obj = mapper_config.first()
-    for key, value in request_dict.items():
-        setattr(mapper_config_obj, key, value)
-    db.commit()
+    try:
+        request_dict = request_body.dict()
+        request_dict["company_id"] = token["company"]["id"]
+        mapper = request_dict.pop("mapper", None)
+        mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id)
+        mapper_config_obj = mapper_config.first()
+        for key, value in request_dict.items():
+            setattr(mapper_config_obj, key, value)
+        db.commit()
 
-    response = jsonable_encoder(mapper_config.first())
-    mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
-    mapper_objs.delete(synchronize_session=False)
-    db.commit()
-    mappers = []
-    for item in mapper:
-        map_rec = ProcessMapField(file_id=id, field_name=item.field_name,
-                                  map_field_name=item.map_field_name,
-                                  is_ignored=item.is_ignored)
-        stored_map_rec = CRUD().add(map_rec)
-        mappers.append(jsonable_encoder(stored_map_rec))
-    response["mapper"] = mappers
-    return response
+        response = jsonable_encoder(mapper_config.first())
+        mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
+        mapper_objs.delete(synchronize_session=False)
+        db.commit()
+        mappers = []
+        for item in mapper:
+            map_rec = ProcessMapField(file_id=id, field_name=item.field_name,
+                                      map_field_name=item.map_field_name,
+                                      is_ignored=item.is_ignored)
+            stored_map_rec = CRUD().add(map_rec)
+            mappers.append(jsonable_encoder(stored_map_rec))
+        response["mapper"] = mappers
+        return response
+    except:
+        raise FailedToUpdateFileTaskConfig
 
 
 def create_config(request_body, token, db):
