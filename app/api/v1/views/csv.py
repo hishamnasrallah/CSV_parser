@@ -31,8 +31,8 @@ def create_new_file_process(request: Request, id:int,  request_body: FileTaskCon
                             db: Session = Depends(CRUD().db_conn)):
 
     data = csv.update_config(request_body, id, token, db)
-    return http_response(data=data, status=status.HTTP_201_CREATED,
-                         message=ResponseConstants.CREATED_MSG)
+    return http_response(data=data, status=status.HTTP_200_OK,
+                         message=ResponseConstants.UPDATED_MSG)
 
 
 @router.get("/mappers", response_model=DashboardResponse)

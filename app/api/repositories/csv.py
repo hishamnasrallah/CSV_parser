@@ -159,15 +159,15 @@ def update_config(request_body, id, token, db):
     print("before second for loop ")
 
     mappers = []
-    for item in mapper:
-        map_rec = ProcessMapField(file_id=id, field_name=item.field_name,
-                                  map_field_name=item.map_field_name,
-                                  is_ignored=item.is_ignored)
-        stored_map_rec = CRUD().add(map_rec)
-        mappers.append(jsonable_encoder(stored_map_rec))
-    print("after first for loop ")
-
-    response["mapper"] = mappers
+    # for item in mapper:
+    #     map_rec = ProcessMapField(file_id=id, field_name=item.field_name,
+    #                               map_field_name=item.map_field_name,
+    #                               is_ignored=item.is_ignored)
+    #     stored_map_rec = CRUD().add(map_rec)
+    #     mappers.append(jsonable_encoder(stored_map_rec))
+    # print("after first for loop ")
+    #
+    # response["mapper"] = mappers
     print("after response['mapper'] = mappers")
 
     return response
