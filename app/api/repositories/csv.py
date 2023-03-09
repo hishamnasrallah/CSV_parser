@@ -140,18 +140,13 @@ def update_config(request_body, id, token, db):
     request_dict["company_id"] = token["company"]["id"]
 
     mapper = request_dict.pop("mapper", None)
-    mapper_config_obj = db.query(ProcessConfig).filter(id == id)
-    stored_data = jsonable_encoder(mapper_config_obj.first())
-    print("before first for loop ")
-    new_data = request_dict
-    for i in new_data:
-        if new_data[i] is not None:
-            stored_data[i] = new_data[i]
-    print("after first for loop ")
-
-    mapper_config_obj.update(stored_data)
+    mapper_config = db.query(ProcessConfig).filter(id == id)
+    mapper_config_obj = mapper_config.first()
+    for key, value in request_dict.items():
+        setattr(mapper_config_obj, key, value)
     db.commit()
-    response = jsonable_encoder(mapper_config_obj.first())
+
+    response = jsonable_encoder(mapper_config_obj)
     print("before mapper objs query ")
 
     mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
