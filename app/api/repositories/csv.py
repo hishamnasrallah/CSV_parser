@@ -145,7 +145,7 @@ def update_config(request_body, id, token, db):
         setattr(mapper_config_obj, key, value)
     db.commit()
 
-    response = jsonable_encoder(mapper_config_obj)
+    response = jsonable_encoder(mapper_config.first())
     mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
     mapper_objs.delete(synchronize_session=False)
     db.commit()
