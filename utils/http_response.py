@@ -2,6 +2,7 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
+import pydash as pydash
 from fastapi.responses import JSONResponse
 from core.constants.response_messages import ResponseConstants
 
@@ -10,6 +11,22 @@ class Language(str, Enum):
     ar: str = "ar"
     en: str = "en"
 
+def convert_dict_to_camel_case(data):
+    if isinstance(data, dict):
+        new_data = {}
+        for key, value in data.items():
+            new_key = pydash.camel_case(key)
+            new_value = convert_dict_to_camel_case(value) if isinstance(value, (dict, list)) else value
+            new_data[new_key] = new_value
+        return new_data
+    elif isinstance(data, list):
+        new_data = []
+        for item in data:
+            new_value = convert_dict_to_camel_case(item) if isinstance(item, (dict, list)) else item
+            new_data.append(new_value)
+        return new_data
+    else:
+        return data
 
 def http_response(message, status, language: Language = "en", data: Any = None,
                   request_id: str = None, meta: Any = None):
@@ -28,6 +45,9 @@ def http_response(message, status, language: Language = "en", data: Any = None,
             message = message[language]
         except (KeyError, TypeError):
             pass
+
+    if data:
+        data = convert_dict_to_camel_case(data)
 
     response = {
         "status": str(status),

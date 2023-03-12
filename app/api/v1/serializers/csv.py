@@ -1,4 +1,5 @@
 from typing import List
+
 from pydantic import Field
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
@@ -9,7 +10,11 @@ class FileTaskConfig(BaseModel):
     file_name: str
     frequency: Frequency
     file_path: str
+    process_id: int
 
+
+class FileTaskResponse(BaseResponse):
+    data: List[FileTaskConfig]
 
 class FieldMapper(BaseModel):
     field_name: str

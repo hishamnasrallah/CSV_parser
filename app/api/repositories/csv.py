@@ -5,7 +5,6 @@ from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
 from app.api.repositories.common import CRUD
-from app.api.v1.serializers.csv import MapperDetail
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
     CSVConfigMapperFieldsDoesNotExist
@@ -22,6 +21,16 @@ def mappers_configs(token, db):
     configs = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"]).all()
     jsonable_encoder(configs)
     return jsonable_encoder(configs)
+
+
+def mapper_config_filter(token, name_contains, db):
+    company_id = token["company"]["id"]
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == company_id,
+                                                   ProcessConfig.file_name.like(f'%{name_contains}%')
+                                                   ).all()
+    if not mapper_config:
+        raise CSVConfigDoesNotExist
+    return jsonable_encoder(mapper_config)
 
 
 def mapper_details(token, id, db):
@@ -203,6 +212,25 @@ def create_config(request_body, token, db):
         raise FailedCreateNewFileTaskConfig
 
 
+def execute_mapper(token, id,  db):
+    from utils.csv_helpers import CSVHelper
+
+    company_id = token["company"]["id"]
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id)
+
+    if not mapper_config.first():
+        raise CSVConfigMapperFieldsDoesNotExist
+
+    mapper_config_obj = mapper_config.first()
+
+    csv_helper = CSVHelper(task_id="Ran manual", company_id=company_id, file_id=mapper_config_obj.id,
+                           file_name=mapper_config_obj.file_name, file_path=mapper_config_obj.file_path,
+                           process_id=mapper_config_obj.process_id)
+    x = csv_helper.main()
+    if x == "No files":
+        return f"{x} NO NEW file with prefix: '{mapper_config_obj.file_name}'  with this path '{mapper_config_obj.file_path}'"
+
+    return f"{x} FILE: '{mapper_config_obj.file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
 
 
 def upload_CSV(request):

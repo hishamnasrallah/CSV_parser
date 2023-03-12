@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, Request
 
 from app.api.v1.dependancies.authorization import validate_authorization
 from app.api.v1.serializers.csv import FileTaskConfigResponse, FileTaskConfigRequest, DashboardResponse, \
-    MapperDetailResponse, DebugHistoryResponse
+    MapperDetailResponse, DebugHistoryResponse, FileTaskResponse
 from core.constants.response_messages import ResponseConstants
 from utils.http_response import http_response
 from app.api.repositories import csv
@@ -21,6 +21,15 @@ def create_new_file_process(request: Request, request_body: FileTaskConfigReques
                             db: Session = Depends(CRUD().db_conn)):
 
     data = csv.create_config(request_body, token, db)
+    return http_response(data=data, status=status.HTTP_201_CREATED,
+                         message=ResponseConstants.CREATED_MSG)
+
+@router.post("/mappers/{id}/exscute/", response_model=FileTaskConfigResponse)
+def create_new_file_process(request: Request, id:int,
+                            token=Depends(validate_authorization),
+                            db: Session = Depends(CRUD().db_conn)):
+
+    data = csv.execute_mapper(token, id, db)
     return http_response(data=data, status=status.HTTP_201_CREATED,
                          message=ResponseConstants.CREATED_MSG)
 
@@ -49,6 +58,16 @@ def get_mapper_details(request: Request, id:int, token=Depends(validate_authoriz
            db: Session = Depends(CRUD().db_conn)):
 
     data = csv.mapper_details(token, id, db)
+    return http_response(data=data, status=status.HTTP_200_OK,
+                         message=ResponseConstants.RETRIEVED_MSG)
+
+
+@router.get("/mappers/filter", response_model=FileTaskResponse)
+def mapper_filter(request: Request, file_name: str, token=Depends(validate_authorization),
+           db: Session = Depends(CRUD().db_conn)):
+
+    data = csv.mapper_config_filter(token, file_name, db)
+
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
