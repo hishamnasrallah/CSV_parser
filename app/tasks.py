@@ -1,10 +1,33 @@
-
+from app.api.models import ProcessConfig
+from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
 
 celery = create_celery()
-
+celery.conf.beat_schedule = {
+    'check-csv-files-every-30-seconds': {
+        'task': 'tasks.check_csv_files',
+        'schedule': 120.0,
+    },
+}
+@celery.task
+def check_csv_files():
+    """
+    Check CSV files configuration model and schedule tasks if necessary.
+    """
+    db = CRUD().db_conn()
+    tasks = db.query(ProcessConfig).all()
+    for task in tasks:
+        file_path = task.file_path
+        file_name = task.file_name
+        frequency = task.frequency.value
+        company_id = task.company_id
+        last_run = task.last_run
+        file_id = task.id
+        process_id = task.process_id
+        add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency, process_id=process_id,
+                        company_id=company_id, last_run=last_run)
 
 @celery.task(name='add new file process task')
 def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, last_run):
