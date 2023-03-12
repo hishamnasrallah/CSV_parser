@@ -23,9 +23,11 @@ class ProcessConfig(BaseModelMixin, Base):
     file_name = Column(String)
     file_path = Column(String, nullable=True)
     frequency = Column(Enum(Frequency), default=None)
+    description = Column(String)
     company_id = Column(Integer)
     process_id = Column(Integer)
     last_run = Column(DateTime, index=False, default=datetime.datetime.now())
+    is_active = Column(Boolean, default=True)
 
     def as_dict(self):
         data = {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -11,13 +11,15 @@ celery.conf.beat_schedule = {
         'schedule': 120.0,
     },
 }
+
+
 @celery.task
 def check_csv_files():
     """
     Check CSV files configuration model and schedule tasks if necessary.
     """
     db = CRUD().db_conn()
-    tasks = db.query(ProcessConfig).all()
+    tasks = db.query(ProcessConfig).filter(ProcessConfig.is_active==True)
     for task in tasks:
         file_path = task.file_path
         file_name = task.file_name
@@ -26,8 +28,10 @@ def check_csv_files():
         last_run = task.last_run
         file_id = task.id
         process_id = task.process_id
-        add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency, process_id=process_id,
+        add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency,
+                        process_id=process_id,
                         company_id=company_id, last_run=last_run)
+
 
 @celery.task(name='add new file process task')
 def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, last_run):
@@ -51,7 +55,6 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
         if time_diff_minutes < frequency:
             return f"FILE: '{file_name}' need MORE TIME to send to celery"
 
-
     if time_diff_minutes > frequency or not last_run:
         csv_helper = CSVHelper(task_id=task_id, company_id=company_id, file_id=file_id, file_name=file_name,
                                file_path=file_path, process_id=process_id)
@@ -59,7 +62,4 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
         if x == "No files":
             return f"{x} NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
 
-
         return f"{x} FILE: '{file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
-
-

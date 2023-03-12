@@ -19,7 +19,6 @@ def mappers_configs(token, db):
     """
 
     configs = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"]).all()
-    jsonable_encoder(configs)
     return jsonable_encoder(configs)
 
 
@@ -50,7 +49,7 @@ def mapper_details(token, id, db):
     if not mapper_config:
         raise CSVConfigMapperFieldsDoesNotExist
     mapper_config = jsonable_encoder(mapper_config)
-    mapper_config["mapper_fields"] = jsonable_encoder(mapper_fields)
+    mapper_config["mapper"] = jsonable_encoder(mapper_fields)
     return jsonable_encoder(mapper_config)
 
 

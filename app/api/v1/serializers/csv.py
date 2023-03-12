@@ -11,7 +11,13 @@ class FileTaskConfig(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$",
+        error_msg = "Only English text is allowed"
 
+    )
+    is_active: bool
 
 class FileTaskResponse(BaseResponse):
     data: List[FileTaskConfig]
@@ -28,7 +34,11 @@ class FileTaskConfigRequest(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
-
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$"
+    )
+    is_active: bool
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]
@@ -36,7 +46,12 @@ class FileTaskConfigBaseResponse(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$"
 
+    )
+    is_active: bool
 
 class FileTaskConfigResponse(BaseResponse):
     data: List[FileTaskConfigBaseResponse]
@@ -46,6 +61,12 @@ class Dashboard(BaseModel):
     file_name: str
     file_path: str
     frequency: Frequency
+    process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$"
+    )
+    is_active: bool
 
 
 class DashboardResponse(BaseResponse):
