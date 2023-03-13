@@ -47,9 +47,8 @@ def create_new_file_process(request: Request, id:int,  request_body: FileTaskCon
 @router.get("/mappers", response_model=DashboardResponse)
 def get_mappers_configs(request: Request, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
-
     data = csv.mappers_configs(token, db)
-    return http_response(data=data, status=status.HTTP_200_OK,
+    return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
@@ -68,7 +67,7 @@ def mapper_filter(request: Request, file_name: str, token=Depends(validate_autho
 
     data = csv.mapper_config_filter(token, file_name, db)
 
-    return http_response(data=data, status=status.HTTP_200_OK,
+    return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
@@ -77,7 +76,7 @@ def get_mapper_history(request: Request, id:int, token=Depends(validate_authoriz
            db: Session = Depends(CRUD().db_conn)):
 
     data = csv.mappers_history(token, id, db)
-    return http_response(data=data, status=status.HTTP_200_OK,
+    return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
 

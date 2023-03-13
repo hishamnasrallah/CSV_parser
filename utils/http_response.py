@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Any
 from uuid import uuid4
-
+from fastapi import Request
 import pydash as pydash
 from fastapi.responses import JSONResponse
+from utils.pagination import paginator
 from core.constants.response_messages import ResponseConstants
 
 
@@ -28,7 +29,7 @@ def convert_dict_to_camel_case(data):
     else:
         return data
 
-def http_response(message, status, language: Language = "en", data: Any = None,
+def http_response(message, status, language: Language = "en", data: Any = None, request: Request = None,
                   request_id: str = None, meta: Any = None):
     if not 200 <= status <= 299:
         return http_error_response(error_message=message, status=status, language=language)
@@ -47,7 +48,12 @@ def http_response(message, status, language: Language = "en", data: Any = None,
             pass
 
     if data:
-        data = convert_dict_to_camel_case(data)
+        if request:
+            paginated_data = paginator(request, data)
+            data = convert_dict_to_camel_case(paginated_data)
+
+        else:
+            data = convert_dict_to_camel_case(data)
 
     response = {
         "status": str(status),
