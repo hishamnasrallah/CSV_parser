@@ -105,3 +105,17 @@ def delete_config(request: Request, id: int, token=Depends(validate_authorizatio
     return http_response(data=data, status=status.HTTP_204_NO_CONTENT,
                          message=ResponseConstants.DELETED_MSG)
 
+@router.get("/empty_redis")
+def delete_config(request: Request, token=Depends(validate_authorization),
+           db: Session = Depends(CRUD().db_conn)):
+    import redis
+    r = redis.Redis(host='redis://decapolis-dev.gnwvrq.ng.0001.use1.cache.amazonaws.com', port=6379, db=0)
+    info = r.info()
+    used_memory = info['used_memory']
+    print('Used memory:', used_memory)
+    result = r.execute_command('MEMORY', 'PURGE')
+
+    # data = result
+    return http_response(data={"reulst": str(result)}, status=status.HTTP_204_NO_CONTENT,
+                         message=ResponseConstants.DELETED_MSG)
+
