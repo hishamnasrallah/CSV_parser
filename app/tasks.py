@@ -3,11 +3,12 @@ from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
+from sqlalchemy.orm import Session
 
 celery = create_celery()
 celery.conf.beat_schedule = {
     'check-csv-files-every-30-seconds': {
-        'task': 'tasks.check_csv_files',
+        'task': 'app.tasks.check_csv_files',
         'schedule': 120.0,
     },
 }
@@ -31,6 +32,7 @@ def check_csv_files():
         add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency,
                         process_id=process_id,
                         company_id=company_id, last_run=last_run)
+    return "Checked all mappers"
 
 
 @celery.task(name='add new file process task')
@@ -63,3 +65,17 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
             return f"{x} NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
 
         return f"{x} FILE: '{file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
+
+
+@celery.task(name="set_mapper_active")
+def mapper_activate(mapper_id: int):
+    db: Session = CRUD().db_conn()
+
+    mapper = db.query(ProcessConfig).filter(ProcessConfig.id == mapper_id)
+    mapper_obj = mapper.first()
+    if not mapper_obj:
+        return {"mapper_id": mapper_id, "status": "Not Exists"}
+    mapper_obj.is_active = True
+    db.commit()
+    return {"mapper": mapper_obj.file_name, "status": "Activated"}
+

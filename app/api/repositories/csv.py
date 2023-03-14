@@ -1,6 +1,7 @@
 import traceback
 from datetime import datetime
 
+import pytz
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
@@ -25,7 +26,7 @@ def mappers_configs(token, db):
 def mapper_config_filter(token, name_contains, db):
     company_id = token["company"]["id"]
     mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == company_id,
-                                                   ProcessConfig.file_name.like(f'%{name_contains}%')
+                                                   ProcessConfig.file_name.ilike(f'%{name_contains}%')
                                                    ).all()
     if not mapper_config:
         raise CSVConfigDoesNotExist
@@ -77,6 +78,12 @@ def delete_config(id, token, db):
     if not config.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CSVConfigDoesNotExist().message_key)
     else:
+        config_obj = config.first()
+        fields_mappers = db.query(ProcessMapField).filter(ProcessMapField.file_id == config_obj.id)
+
+        fields_mappers.delete(synchronize_session=False)
+        db.commit()
+
         config.delete(synchronize_session=False)
         db.commit()
         return 'deleted'
@@ -143,6 +150,21 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
         db.commit()
         return stored_data
 
+def change_mapper_status(id, token, db):
+    company_id = token["company"]["id"]
+
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id)
+    if not mapper_config.first():
+        raise CSVConfigDoesNotExist
+    mapper_config_obj = mapper_config.first()
+    if mapper_config_obj.is_active:
+        mapper_config_obj.is_active = False
+    elif not mapper_config_obj.is_active:
+        mapper_config_obj.is_active = True
+    else:
+        mapper_config_obj.is_active = True
+    db.commit()
+    return jsonable_encoder(mapper_config_obj)
 
 def update_config(request_body, id, token, db):
     """
@@ -151,6 +173,8 @@ def update_config(request_body, id, token, db):
     :param token: to extract company_id from it
     :return: new configuration
     """
+    from app.tasks import mapper_activate
+
     try:
         request_dict = request_body.dict()
         request_dict["company_id"] = token["company"]["id"]
@@ -160,7 +184,8 @@ def update_config(request_body, id, token, db):
         for key, value in request_dict.items():
             setattr(mapper_config_obj, key, value)
         db.commit()
-
+        task = mapper_activate.apply_async(args=(mapper_config_obj.id,),
+                                           eta=mapper_config_obj.set_active_at.astimezone(pytz.utc))
         response = jsonable_encoder(mapper_config.first())
         mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
         mapper_objs.delete(synchronize_session=False)
@@ -185,12 +210,16 @@ def create_config(request_body, token, db):
     :param token: to extract company_id from it
     :return: new configuration
     """
+    from app.tasks import mapper_activate
+
     request_dict = request_body.dict()
     request_dict["company_id"] = token["company"]["id"]
     try:
         mapper = request_dict.pop("mapper", None)
         rec = ProcessConfig(**request_dict)
         file_config_rec = CRUD().add(rec)
+        task = mapper_activate.apply_async(args=(file_config_rec.id,),
+                                           eta=file_config_rec.set_active_at.astimezone(pytz.utc))
         file_id = file_config_rec.id
         response = jsonable_encoder(file_config_rec)
         mappers = []

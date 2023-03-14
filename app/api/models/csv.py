@@ -27,6 +27,7 @@ class ProcessConfig(BaseModelMixin, Base):
     company_id = Column(Integer)
     process_id = Column(Integer)
     last_run = Column(DateTime, index=False, default=datetime.datetime.now())
+    set_active_at = Column(DateTime, index=False)
     is_active = Column(Boolean, default=True)
 
     def as_dict(self):

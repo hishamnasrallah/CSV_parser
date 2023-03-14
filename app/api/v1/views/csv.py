@@ -43,6 +43,15 @@ def create_new_file_process(request: Request, id:int,  request_body: FileTaskCon
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.UPDATED_MSG)
 
+@router.put("/mappers/{id}/change-status", response_model=FileTaskConfigResponse)
+def change_mapper_status(request: Request, id:int,
+                            token=Depends(validate_authorization),
+                            db: Session = Depends(CRUD().db_conn)):
+
+    data = csv.change_mapper_status(id, token, db)
+    return http_response(data=data, status=status.HTTP_200_OK,
+                         message=ResponseConstants.UPDATED_MSG)
+
 
 @router.get("/mappers", response_model=DashboardResponse)
 def get_mappers_configs(request: Request, token=Depends(validate_authorization),

@@ -1,5 +1,5 @@
 from typing import List
-
+import datetime
 from pydantic import Field
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
@@ -18,6 +18,7 @@ class FileTaskConfig(BaseModel):
 
     )
     is_active: bool
+    set_active_at: datetime.datetime
 
 class FileTaskResponse(BaseResponse):
     data: List[FileTaskConfig]
@@ -39,6 +40,7 @@ class FileTaskConfigRequest(BaseModel):
         regex="^[a-zA-Z ]*$"
     )
     is_active: bool
+    set_active_at: datetime.datetime
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]
@@ -52,6 +54,7 @@ class FileTaskConfigBaseResponse(BaseModel):
 
     )
     is_active: bool
+    set_active_at: datetime.datetime
 
 class FileTaskConfigResponse(BaseResponse):
     data: List[FileTaskConfigBaseResponse]
@@ -67,7 +70,7 @@ class Dashboard(BaseModel):
         regex="^[a-zA-Z ]*$"
     )
     is_active: bool
-
+    set_active_at: datetime.datetime
 
 class DashboardResponse(BaseResponse):
     data: List[Dashboard]
