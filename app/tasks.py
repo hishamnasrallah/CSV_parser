@@ -35,7 +35,7 @@ def check_csv_files():
     return "Checked all mappers"
 
 
-@celery.task(name='add new file process task 1111')
+@celery.task(name='add new file to task')
 def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, last_run):
     task_id = celery.current_task.request.id
 
