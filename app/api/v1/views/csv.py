@@ -69,6 +69,14 @@ def get_mapper_details(request: Request, id:int, token=Depends(validate_authoriz
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
+@router.post("/mappers/{id}/clone/", response_model=FileTaskConfigResponse)
+def create_new_file_process(request: Request, id:int,
+                            token=Depends(validate_authorization),
+                            db: Session = Depends(CRUD().db_conn)):
+
+    data = csv.clone_mapper(token, id, db)
+    return http_response(data=data, status=status.HTTP_201_CREATED,
+                         message=ResponseConstants.CREATED_MSG)
 
 @router.get("/mappers/filter", response_model=FileTaskResponse)
 def mapper_filter(request: Request, file_name: str, token=Depends(validate_authorization),

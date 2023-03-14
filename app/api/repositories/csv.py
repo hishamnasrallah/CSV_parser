@@ -42,7 +42,8 @@ def mapper_details(token, id, db):
     :return: the specfic mapper configuration details with field mapping
     """
 
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"], ProcessConfig.id==id).first()
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"],
+                                                   ProcessConfig.id == id).first()
     if not mapper_config:
         raise CSVConfigDoesNotExist
 
@@ -128,7 +129,8 @@ def get_company_processes(token, request):
 
 
 def create_file_history(file_id, file_size, file_name_as_received, task_id="1"):
-    history_rec = FileReceiveHistory(file_id=file_id, file_size_kb=file_size, file_name_as_received=file_name_as_received, task_id=task_id)
+    history_rec = FileReceiveHistory(file_id=file_id, file_size_kb=file_size,
+                                     file_name_as_received=file_name_as_received, task_id=task_id)
     history_rec = CRUD().add(history_rec)
     return history_rec
 
@@ -150,6 +152,7 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
         db.commit()
         return stored_data
 
+
 def change_mapper_status(id, token, db):
     company_id = token["company"]["id"]
 
@@ -165,6 +168,7 @@ def change_mapper_status(id, token, db):
         mapper_config_obj.is_active = True
     db.commit()
     return jsonable_encoder(mapper_config_obj)
+
 
 def update_config(request_body, id, token, db):
     """
@@ -224,7 +228,6 @@ def create_config(request_body, token, db):
         response = jsonable_encoder(file_config_rec)
         mappers = []
         for item in mapper:
-
             map_rec = ProcessMapField(file_id=file_id, field_name=item.field_name,
                                       map_field_name=item.map_field_name,
                                       is_ignored=item.is_ignored)
@@ -240,7 +243,7 @@ def create_config(request_body, token, db):
         raise FailedCreateNewFileTaskConfig
 
 
-def execute_mapper(token, id,  db):
+def execute_mapper(token, id, db):
     from utils.csv_helpers import CSVHelper
 
     company_id = token["company"]["id"]
@@ -259,6 +262,43 @@ def execute_mapper(token, id,  db):
         return f"{x} NO NEW file with prefix: '{mapper_config_obj.file_name}'  with this path '{mapper_config_obj.file_path}'"
 
     return f"{x} FILE: '{mapper_config_obj.file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
+
+
+def clone_mapper(token, id, db):
+    company_id = token["company"]["id"]
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id)
+    if not mapper_config.first():
+        raise CSVConfigDoesNotExist
+    mapper_config_obj = mapper_config.first()
+    rec = ProcessConfig(process_id=mapper_config_obj.process_id,
+                        company_id=mapper_config_obj.company_id,
+                        file_name=mapper_config_obj.file_name,
+                        file_path=mapper_config_obj.file_path,
+                        frequency=mapper_config_obj.frequency,
+                        description=mapper_config_obj.description,
+                        set_active_at=mapper_config_obj.set_active_at,
+                        is_active=mapper_config_obj.is_active
+                        )
+
+    rec.file_name = f"[CLONE] - {rec.file_name}"
+    rec.description = f"[CLONE] - {rec.description}"
+
+    mapper_id = mapper_config_obj.id
+    file_config_rec = CRUD().add(rec)
+    cloned_mapper_id = file_config_rec.id
+    mapper_fields = db.query(ProcessMapField).filter(ProcessMapField.file_id == mapper_id).all()
+
+    for field_mapper in mapper_fields:
+        field_rec = ProcessMapField(file_id=file_config_rec.id,
+                                    field_name=field_mapper.field_name,
+                                    map_field_name=field_mapper.map_field_name,
+                                    is_ignored=field_mapper.is_ignored
+                                    )
+        field_mapper_rec = CRUD().add(field_rec)
+    mapper_fields = db.query(ProcessMapField).filter(ProcessMapField.file_id == cloned_mapper_id).all()
+    cloned_mapper_config = jsonable_encoder(rec)
+    cloned_mapper_config["mapper"] = jsonable_encoder(mapper_fields)
+    return jsonable_encoder(cloned_mapper_config)
 
 
 def upload_CSV(request):
