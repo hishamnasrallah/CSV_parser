@@ -51,17 +51,34 @@ def http_response(message, status, language: Language = "en", data: Any = None, 
         if request:
             paginated_data = paginator(request, data)
             data = convert_dict_to_camel_case(paginated_data)
-
+            response = {
+                "status": str(status),
+                "message": message,
+                "results": data["results"] if data["results"] else [],
+                # "total": data["total"],
+                "count": data["total"],
+                "next": data["next"],
+                "previous": data["previous"],
+                "meta": meta if meta else {},
+                "request-id": request_id if request_id else generate_request_id()
+            }
         else:
             data = convert_dict_to_camel_case(data)
-
-    response = {
-        "status": str(status),
-        "message": message,
-        "data": data if data else [],
-        "meta": meta if meta else {},
-        "request-id": request_id if request_id else generate_request_id()
-    }
+            response = {
+                "status": str(status),
+                "message": message,
+                "results": data if data else [],
+                "meta": meta if meta else {},
+                "request-id": request_id if request_id else generate_request_id()
+            }
+    else:
+        response = {
+            "status": str(status),
+            "message": message,
+            "results": data if data else [],
+            "meta": meta if meta else {},
+            "request-id": request_id if request_id else generate_request_id()
+        }
 
     headers = {}
     try:

@@ -22,37 +22,38 @@ def paginator(request: Request, data, page_num: int = 1, page_size: int = 10):
     end = start + page_size
     data_length = len(data)
     response = {
-        "data": data[start:end],
+        "results": data[start:end],
         "total": data_length,
         "count": page_size,
-        "pagination": {}
+        "next": None,
+        "previous": None
                 }
 
 
     if end >= data_length:
-        response["pagination"]["next"] = None
+        response["next"] = None
         if page_num > 1:
             query_params['page_num'] = page_num-1
             query_params['page_size'] = page_size
             new_query_string = urlencode(query_params, doseq=True)
             url = urlunsplit(("", "", parsed_url.path, new_query_string, ""))
-            response["pagination"]["previous"] = url
+            response["previous"] = url
         else:
-            response["pagination"]["previous"] = None
+            response["previous"] = None
     else:
         if page_num > 1:
             query_params['page_num'] = page_num-1
             query_params['page_size'] = page_size
             new_query_string = urlencode(query_params, doseq=True)
             url = urlunsplit(("", "", parsed_url.path, new_query_string, ""))
-            response["pagination"]["previous"] = url
+            response["previous"] = url
         else:
-            response["pagination"]["previous"] = None
+            response["previous"] = None
 
         query_params['page_num'] = page_num + 1
         query_params['page_size'] = page_size
         new_query_string = urlencode(query_params, doseq=True)
         url = urlunsplit(("", "", parsed_url.path, new_query_string, ""))
-        response["pagination"]["next"] = url
+        response["next"] = url
 
     return response

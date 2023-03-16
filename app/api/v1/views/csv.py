@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status, Request
+from fastapi import APIRouter, Depends, status, Request, Query
 
 from app.api.v1.dependancies.authorization import validate_authorization
 from app.api.v1.serializers.csv import FileTaskConfigResponse, FileTaskConfigRequest, DashboardResponse, \
@@ -54,9 +54,12 @@ def change_mapper_status(request: Request, id:int,
 
 
 @router.get("/mappers", response_model=DashboardResponse)
-def get_mappers_configs(request: Request, token=Depends(validate_authorization),
+def get_mappers_configs(request: Request, name: str = Query(None), token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
-    data = csv.mappers_configs(token, db)
+    if name:
+        data = csv.mapper_config_filter(token, name, db)
+    else:
+        data = csv.mappers_configs(token, db)
     return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
@@ -79,10 +82,10 @@ def create_new_file_process(request: Request, id:int,
                          message=ResponseConstants.CREATED_MSG)
 
 @router.get("/mappers/filter", response_model=FileTaskResponse)
-def mapper_filter(request: Request, file_name: str, token=Depends(validate_authorization),
+def mapper_filter(request: Request, name: str, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
 
-    data = csv.mapper_config_filter(token, file_name, db)
+    data = csv.mapper_config_filter(token, name, db)
 
     return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
