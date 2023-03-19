@@ -28,8 +28,6 @@ def mapper_config_filter(token, name_contains, db):
     mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == company_id,
                                                    ProcessConfig.file_name.ilike(f'%{name_contains}%')
                                                    ).all()
-    if not mapper_config:
-        raise CSVConfigDoesNotExist
     return jsonable_encoder(mapper_config)
 
 
