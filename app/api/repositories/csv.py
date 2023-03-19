@@ -4,11 +4,12 @@ from datetime import datetime
 import pytz
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField
+from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField, MapperTask, CeleryTaskStatus
 from app.api.repositories.common import CRUD
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
     CSVConfigMapperFieldsDoesNotExist
+from utils.delete_specific_task import cancel_task
 
 
 def mappers_configs(token, db):
@@ -185,11 +186,39 @@ def update_config(request_body, id, token, db):
         mapper = request_dict.pop("mapper", None)
         mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id)
         mapper_config_obj = mapper_config.first()
+        if "set_active_at" not in request_dict.keys() or request_dict["is_active"]:
+            request_dict['set_active_at'] = None
+
         for key, value in request_dict.items():
             setattr(mapper_config_obj, key, value)
         db.commit()
-        task = mapper_activate.apply_async(args=(mapper_config_obj.id,),
-                                           eta=mapper_config_obj.set_active_at.astimezone(pytz.utc))
+        if not request_dict['set_active_at'] and not request_dict["is_active"]:
+            mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == int(request_dict["company_id"]),
+                                                        MapperTask.task_name == "set_mapper_active",
+                                                        MapperTask.file_id == mapper_config_obj.id,
+                                                        MapperTask.status == CeleryTaskStatus.received)
+            task_id_list = [task.task_id for task in mapper_tasks]
+            cancel_task(task_id_list)
+            mapper_tasks.update({MapperTask.status: CeleryTaskStatus.revoked})
+            db.commit()
+        elif mapper_config_obj.set_active_at:
+            task = mapper_activate.apply_async(args=(mapper_config_obj.id,),
+                                               eta=mapper_config_obj.set_active_at.astimezone(pytz.utc))
+            mapper_task = MapperTask(company_id=int(request_dict["company_id"]), task_id=str(task), file_id=mapper_config_obj.id,
+                                     task_name="set_mapper_active",
+                                     status=CeleryTaskStatus.received)
+
+            mapper_task_rec = CRUD().add(mapper_task)
+            task_id = task.id
+        elif request_dict["is_active"]:
+            mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == int(request_dict["company_id"]),
+                                                        MapperTask.task_name == "set_mapper_active",
+                                                        MapperTask.file_id == mapper_config_obj.id,
+                                                        MapperTask.status == CeleryTaskStatus.received)
+            task_id_list = [task.task_id for task in mapper_tasks]
+            cancel_task(task_id_list)
+            mapper_tasks.update({MapperTask.status: CeleryTaskStatus.revoked})
+            db.commit()
         response = jsonable_encoder(mapper_config.first())
         mapper_objs = db.query(ProcessMapField).filter(ProcessMapField.file_id == id)
         mapper_objs.delete(synchronize_session=False)
@@ -222,8 +251,9 @@ def create_config(request_body, token, db):
         mapper = request_dict.pop("mapper", None)
         rec = ProcessConfig(**request_dict)
         file_config_rec = CRUD().add(rec)
-        task = mapper_activate.apply_async(args=(file_config_rec.id,),
-                                           eta=file_config_rec.set_active_at.astimezone(pytz.utc))
+        if file_config_rec.set_active_at:
+            task = mapper_activate.apply_async(args=(file_config_rec.id,),
+                                               eta=file_config_rec.set_active_at.astimezone(pytz.utc))
         file_id = file_config_rec.id
         response = jsonable_encoder(file_config_rec)
         mappers = []

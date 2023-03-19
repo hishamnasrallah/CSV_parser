@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 import datetime
-from pydantic import Field
+from pydantic import Field, validator
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
 from app.api.models import Frequency
@@ -18,7 +18,7 @@ class FileTaskConfig(BaseModel):
 
     )
     is_active: bool
-    set_active_at: datetime.datetime
+    set_active_at: Optional[datetime.datetime] = None
 
 class FileTaskResponse(BaseResponse):
     data: List[FileTaskConfig]
@@ -40,7 +40,13 @@ class FileTaskConfigRequest(BaseModel):
         regex="^[a-zA-Z ]*$"
     )
     is_active: bool
-    set_active_at: datetime.datetime
+    set_active_at: Optional[datetime.datetime] = None
+    @validator('set_active_at', always=True)
+    def check_future_datetime(cls, v, values):
+        if v is not None and v <= datetime.datetime.now():
+            raise ValueError('Set active datetime must be in the future')
+        return v
+
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]
