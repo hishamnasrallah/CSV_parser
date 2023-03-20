@@ -100,8 +100,12 @@ class CSVHelper:
         return mapped_data
 
     def send_data(self, company_id, process_id, data):
+        responses = []
         for _obj in data:
-            send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
+            response = send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
+            responses.append(response)
+
+        return responses
 
 
     def store_history(self):
@@ -152,6 +156,6 @@ class CSVHelper:
             self.store_history()
             self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
-            self.send_data(self.company_id, self.process_id, mapped_data)
+            x = self.send_data(self.company_id, self.process_id, mapped_data)
 
-            return mapped_data
+            return x

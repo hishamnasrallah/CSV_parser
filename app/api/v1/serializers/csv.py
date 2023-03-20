@@ -1,5 +1,6 @@
-from typing import List
-from pydantic import Field
+from typing import List, Optional
+import datetime
+from pydantic import Field, validator
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
 from app.api.models import Frequency
@@ -9,7 +10,18 @@ class FileTaskConfig(BaseModel):
     file_name: str
     frequency: Frequency
     file_path: str
+    process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$",
+        error_msg = "Only English text is allowed"
 
+    )
+    is_active: bool
+    set_active_at: Optional[datetime.datetime] = None
+
+class FileTaskResponse(BaseResponse):
+    data: List[FileTaskConfig]
 
 class FieldMapper(BaseModel):
     field_name: str
@@ -23,6 +35,17 @@ class FileTaskConfigRequest(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$"
+    )
+    is_active: bool
+    set_active_at: Optional[datetime.datetime] = None
+    @validator('set_active_at', always=True)
+    def check_future_datetime(cls, v, values):
+        if v is not None and v <= datetime.datetime.now():
+            raise ValueError('Set active datetime must be in the future')
+        return v
 
 
 class FileTaskConfigBaseResponse(BaseModel):
@@ -31,7 +54,13 @@ class FileTaskConfigBaseResponse(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$"
 
+    )
+    is_active: bool
+    set_active_at: datetime.datetime
 
 class FileTaskConfigResponse(BaseResponse):
     data: List[FileTaskConfigBaseResponse]
@@ -41,7 +70,13 @@ class Dashboard(BaseModel):
     file_name: str
     file_path: str
     frequency: Frequency
-
+    process_id: int
+    description: str = Field(
+        ...,
+        regex="^[a-zA-Z ]*$"
+    )
+    is_active: bool
+    set_active_at: datetime.datetime
 
 class DashboardResponse(BaseResponse):
     data: List[Dashboard]

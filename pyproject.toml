@@ -51,6 +51,7 @@ flake8-fastapi = "^0.7.0"
 fastapi-camelcase = "^1.0.5"
 paramiko = "^3.0.0"
 watchfiles = "^0.18.1"
+pydash = "^6.0.2"
 
 [tool.poetry.dev-dependencies]
 

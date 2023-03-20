@@ -17,8 +17,31 @@ class CSVConfigDoesNotExist(Exception):
         super().__init__(self.message_key, self.status)
 
 
+class CSVConfigMapperFieldsDoesNotExist(Exception):
+    """
+    while using try except you should follow the following style
+    try:
+        try_dody
+    except {{specify_exception_class}} as e: # e is a variable will contain the error message of the exception
+        exception_body
+    """
+
+    def __init__(self, message_key=CSVConstants.CONFIG_MAPPER_FIELDS_DOES_NOT_EXIST_ERROR):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)
+
+
 class FailedCreateNewFileTaskConfig(Exception):
     def __init__(self, message_key=CSVConstants.FAILED_CREATE_FILE_TASK_CONFIG):
+        self.message_key = message_key
+        self.status = 401
+
+        super().__init__(self.message_key, self.status)
+
+class FailedToUpdateFileTaskConfig(Exception):
+    def __init__(self, message_key=CSVConstants.FAILED_UPDATE_FILE_TASK_CONFIG):
         self.message_key = message_key
         self.status = 401
 
