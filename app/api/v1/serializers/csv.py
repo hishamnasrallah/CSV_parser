@@ -63,7 +63,7 @@ class FileTaskConfigBaseResponse(BaseModel):
 
     )
     is_active: bool
-    set_active_at: datetime.datetime
+    set_active_at: Optional[datetime.datetime] = None
 
 class FileTaskConfigResponse(BaseResponse):
     data: List[FileTaskConfigBaseResponse]
@@ -81,7 +81,7 @@ class Dashboard(BaseModel):
 
     )
     is_active: bool
-    set_active_at: datetime.datetime
+    set_active_at: Optional[datetime.datetime] = None
 
 class DashboardResponse(BaseResponse):
     data: List[Dashboard]
