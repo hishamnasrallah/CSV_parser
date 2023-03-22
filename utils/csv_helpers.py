@@ -1,5 +1,8 @@
+import codecs
 import csv
 import os
+
+import chardet
 import paramiko
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
@@ -79,7 +82,10 @@ class CSVHelper:
         os.unlink(full_file_path)
 
     def read_file(self, file_name=None, headers=None):
-        with open(f"{self.current_dir}/tmp/{file_name}", "r") as file:
+        with open(f"{self.current_dir}/tmp/{file_name}", "rb") as file:
+            file_content = file.read()
+            detected_encoding = chardet.detect(file_content)['encoding']
+            file_content = file_content.decode(detected_encoding)
 
             keys = headers
             headers = []
@@ -87,7 +93,7 @@ class CSVHelper:
                 headers.append(each_key)
 
             mapped_data = []
-            reader = csv.reader(file, delimiter=',', skipinitialspace=True)
+            reader = csv.reader(file_content.splitlines(), delimiter=',', skipinitialspace=True)
             for each_line in reader:
                 each_record = dict()
                 column_index = 0
