@@ -20,10 +20,10 @@ class Frequency(int, enum.Enum):
 
 
 class ProcessConfig(BaseModelMixin, Base):
-    file_name = Column(String)
-    file_path = Column(String, nullable=True)
+    file_name = Column(String(length=255))
+    file_path = Column(String(length=255), nullable=True)
     frequency = Column(Enum(Frequency), default=None)
-    description = Column(String)
+    description = Column(String(length=255))
     company_id = Column(Integer)
     process_id = Column(Integer)
     last_run = Column(DateTime, index=False, default=datetime.datetime.now())
@@ -40,8 +40,8 @@ class ProcessConfig(BaseModelMixin, Base):
 
 class ProcessMapField(BaseModelMixin, Base):
     file_id = Column(Integer, index=True)
-    field_name = Column(String, nullable=True)
-    map_field_name = Column(String, nullable=True)
+    field_name = Column(String(length=255), nullable=True)
+    map_field_name = Column(String(length=255), nullable=True)
     is_ignored = Column(Boolean, default=False)
 
     def as_dict(self):
@@ -55,5 +55,5 @@ class ProcessMapField(BaseModelMixin, Base):
 class FileReceiveHistory(BaseModelMixin, Base):
     file_id = Column(Integer, index=True)
     file_size_kb = Column(BigInteger, nullable=True)
-    file_name_as_received = Column(String, nullable=True)
-    task_id = Column(String, nullable=True)
+    file_name_as_received = Column(String(length=255), nullable=True)
+    task_id = Column(String(length=255), nullable=True)

@@ -16,9 +16,9 @@ class CeleryTaskStatus(int, enum.Enum):
 
 class MapperTask(BaseModelMixin, Base):
     company_id = Column(Integer, index=True)
-    task_id = Column(String, nullable=True)
+    task_id = Column(String(length=255), nullable=True)
     file_id = Column(Integer, nullable=True)
-    task_name = Column(String, nullable=True)
+    task_name = Column(String(length=255), nullable=True)
     status = Column(Enum(CeleryTaskStatus), default=None)
 
     def as_dict(self):

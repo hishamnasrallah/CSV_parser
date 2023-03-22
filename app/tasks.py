@@ -9,7 +9,7 @@ celery = create_celery()
 celery.conf.beat_schedule = {
     'check-csv-files-every-120-seconds': {
         'task': 'app.tasks.check_csv_files',
-        'schedule': 120.0,
+        'schedule': 900.0,
     },
 }
 
