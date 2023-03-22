@@ -1,7 +1,6 @@
 from typing import List, Optional
 import datetime
 from pydantic import Field, validator
-
 from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse

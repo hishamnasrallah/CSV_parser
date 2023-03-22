@@ -76,6 +76,9 @@ def http_response(message, status, language: Language = "en", data: Any = None, 
             "status": str(status),
             "message": message,
             "results": data if data else [],
+            "count": 0,
+            "next": None,
+            "previous": None,
             "meta": meta if meta else {},
             "request-id": request_id if request_id else generate_request_id()
         }

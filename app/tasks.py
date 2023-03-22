@@ -1,4 +1,4 @@
-from app.api.models import ProcessConfig
+from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus
 from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 
 celery = create_celery()
 celery.conf.beat_schedule = {
-    'check-csv-files-every-30-seconds': {
+    'check-csv-files-every-120-seconds': {
         'task': 'app.tasks.check_csv_files',
-        'schedule': 120.0,
+        'schedule': 900.0,
     },
 }
 
@@ -37,8 +37,6 @@ def check_csv_files():
 
 @celery.task(name='add new file to task')
 def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, last_run):
-    task_id = celery.current_task.request.id
-
     """
 
     :param file_id: the row id for the mapper configuration
@@ -50,6 +48,8 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
     :return: after checking the time difference between system time and the last run.
     if it greater than the frequency the function wil run.
     """
+    task_id = celery.current_task.request.id
+
     time_diff_minutes = 0
 
     if last_run:
@@ -62,20 +62,37 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
                                file_path=file_path, process_id=process_id)
         x = csv_helper.main()
         if x == "No files":
-            return f"{x} NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
-
-        return f"{x} FILE: '{file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
-
+            result = f"{x} NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
+        else:
+            result = f"{x} FILE: '{file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
+        return result
 
 @celery.task(name="set_mapper_active")
 def mapper_activate(mapper_id: int):
+    task_id = celery.current_task.request.id
+
     db: Session = CRUD().db_conn()
 
     mapper = db.query(ProcessConfig).filter(ProcessConfig.id == mapper_id)
     mapper_obj = mapper.first()
     if not mapper_obj:
         return {"mapper_id": mapper_id, "status": "Not Exists"}
-    mapper_obj.is_active = True
-    db.commit()
+    mapper_task = db.query(MapperTask).filter(MapperTask.task_id == task_id)
+    if not mapper_task:
+        pass
+    else:
+        mapper_task_obj = mapper_task.first()
+        mapper_task_status = mapper_task_obj.status
+        if mapper_task_status != CeleryTaskStatus.revoked:
+            mapper_obj.is_active = True
+            db.commit()
+
+            mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == mapper_obj.company_id,
+                                                        MapperTask.task_name == "set_mapper_active",
+                                                        MapperTask.file_id == mapper_obj.id,
+                                                        MapperTask.status == CeleryTaskStatus.received)
+            mapper_tasks.update({MapperTask.status: CeleryTaskStatus.success})
+            db.commit()
+
     return {"mapper": mapper_obj.file_name, "status": "Activated"}
 
