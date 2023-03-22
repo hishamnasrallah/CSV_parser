@@ -52,6 +52,7 @@ fastapi-camelcase = "^1.0.5"
 paramiko = "^3.0.0"
 watchfiles = "^0.18.1"
 pydash = "^6.0.2"
+chardet = "^5.1.0"
 
 [tool.poetry.dev-dependencies]
 
