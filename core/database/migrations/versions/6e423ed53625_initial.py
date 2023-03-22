@@ -24,8 +24,8 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('file_id', sa.Integer(), nullable=True),
     sa.Column('file_size_kb', sa.BigInteger(), nullable=True),
-    sa.Column('file_name_as_received', sa.String(), nullable=True),
-    sa.Column('task_id', sa.String(), nullable=True),
+    sa.Column('file_name_as_received', sa.String(length=255), nullable=True),
+    sa.Column('task_id', sa.String(length=255), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_filereceivehistory_file_id'), 'filereceivehistory', ['file_id'], unique=False)
@@ -34,8 +34,8 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), autoincrement=True, nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('file_name', sa.String(), nullable=True),
-    sa.Column('file_path', sa.String(), nullable=True),
+    sa.Column('file_name', sa.String(length=255), nullable=True),
+    sa.Column('file_path', sa.String(length=255), nullable=True),
     sa.Column('frequency', sa.Enum('min_1', 'min_15', 'min_30', 'hour_1', 'hour_2', 'hour_3', 'hour_6', 'hour_12', 'hour_24', name='frequency'), nullable=True),
     sa.Column('company_id', sa.Integer(), nullable=True),
     sa.Column('process_id', sa.Integer(), nullable=True),
@@ -48,8 +48,8 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('file_id', sa.Integer(), nullable=True),
-    sa.Column('field_name', sa.String(), nullable=True),
-    sa.Column('map_field_name', sa.String(), nullable=True),
+    sa.Column('field_name', sa.String(length=255), nullable=True),
+    sa.Column('map_field_name', sa.String(length=255), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_processmapfield_file_id'), 'processmapfield', ['file_id'], unique=False)

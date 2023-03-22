@@ -23,9 +23,9 @@ def upgrade() -> None:
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('company_id', sa.Integer(), nullable=True),
-    sa.Column('task_id', sa.String(), nullable=True),
+    sa.Column('task_id', sa.String(length=255), nullable=True),
     sa.Column('file_id', sa.Integer(), nullable=True),
-    sa.Column('task_name', sa.String(), nullable=True),
+    sa.Column('task_name', sa.String(length=255), nullable=True),
     sa.Column('status', sa.Enum('received', 'revoked', 'success', 'failed', name='celerytaskstatus'), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
