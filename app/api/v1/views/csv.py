@@ -43,7 +43,7 @@ def create_new_file_process(request: Request, id:int,  request_body: FileTaskCon
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.UPDATED_MSG)
 
-@router.put("/mappers/{id}/change-status", response_model=FileTaskConfigResponse)
+@router.put("/mappers/{id}/change-status/", response_model=FileTaskConfigResponse)
 def change_mapper_status(request: Request, id:int,
                             token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
@@ -53,7 +53,7 @@ def change_mapper_status(request: Request, id:int,
                          message=ResponseConstants.UPDATED_MSG)
 
 
-@router.get("/mappers", response_model=DashboardResponse)
+@router.get("/mappers/", response_model=DashboardResponse)
 def get_mappers_configs(request: Request, name: str = Query(None), token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
     if name:
@@ -64,7 +64,7 @@ def get_mappers_configs(request: Request, name: str = Query(None), token=Depends
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
-@router.get("/mapper/{id}", response_model=MapperDetailResponse)
+@router.get("/mapper/{id}/", response_model=MapperDetailResponse)
 def get_mapper_details(request: Request, id:int, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
 
@@ -81,7 +81,7 @@ def create_new_file_process(request: Request, id:int,
     return http_response(data=data, status=status.HTTP_201_CREATED,
                          message=ResponseConstants.CREATED_MSG)
 
-@router.get("/mappers/filter", response_model=FileTaskResponse)
+@router.get("/mappers/filter/", response_model=FileTaskResponse)
 def mapper_filter(request: Request, name: str, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
 
@@ -91,7 +91,7 @@ def mapper_filter(request: Request, name: str, token=Depends(validate_authorizat
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
-@router.get("/mapper/{id}/debug", response_model=DebugHistoryResponse)
+@router.get("/mapper/{id}/debug/", response_model=DebugHistoryResponse)
 def get_mapper_history(request: Request, id:int, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
 
@@ -100,7 +100,7 @@ def get_mapper_history(request: Request, id:int, token=Depends(validate_authoriz
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
-@router.delete("/mapper/{id}")
+@router.delete("/mapper/{id}/")
 def delete_config(request: Request, id: int, token=Depends(validate_authorization),
            db: Session = Depends(CRUD().db_conn)):
 
