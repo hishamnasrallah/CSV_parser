@@ -1,6 +1,8 @@
 from typing import List, Optional
 import datetime
 from pydantic import Field, validator
+
+from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
 from app.api.models import Frequency
@@ -13,7 +15,7 @@ class FileTaskConfig(BaseModel):
     process_id: int
     description: str = Field(
         ...,
-        regex="^[a-zA-Z0-9 ,.\-_'&()[\]]+$",
+        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
         error_msg = "Only English text is allowed"
 
     )
@@ -37,7 +39,7 @@ class FileTaskConfigRequest(BaseModel):
     process_id: int
     description: str = Field(
         ...,
-        regex="^[a-zA-Z0-9 ,.\-_'&()[\]]+$",
+        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
         error_msg="Only English text is allowed"
 
     )
@@ -58,7 +60,7 @@ class FileTaskConfigBaseResponse(BaseModel):
     process_id: int
     description: str = Field(
         ...,
-        regex="^[a-zA-Z0-9 ,.\-_'&()[\]]+$",
+        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
         error_msg="Only English text is allowed"
 
     )
@@ -76,7 +78,7 @@ class Dashboard(BaseModel):
     process_id: int
     description: str = Field(
         ...,
-        regex="^[a-zA-Z0-9 ,.\-_'&()[\]]+$",
+        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
         error_msg="Only English text is allowed"
 
     )

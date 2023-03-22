@@ -1,0 +1,1 @@
+MAPPER_DESCRIPTION_VALIDATION_REGEX = "^[a-zA-Z0-9 ,.\-_'&()[\]]+$"
