@@ -53,12 +53,35 @@ class InvalidAuthentication(Exception):
         self.status = 401
 
         super().__init__(self.message_key, self.status)
-#
-#
-# class InvalidPhoneNumber(Exception):
-#     def __init__(self, message_key=UserConstants.INVALID_PHONE_NUMBER):
-#         self.message_key = message_key
-#         self.status = 401
-#
-#         super().__init__(self.message_key, self.status)
+
+
+class CantChangeStatusNoProfileAssigned(Exception):
+    def __init__(self, message_key=CSVConstants.CANT_CHANGE_STATUS_NO_ASSIGNED_PROFILE):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)
+
+
+class NoProfileAssigned(Exception):
+    def __init__(self, message_key=CSVConstants.NO_ASSIGNED_PROFILE):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)
+
+
+class ProfileAlreadyDeleted(Exception):
+    def __init__(self, message_key=CSVConstants.PROFILE_ALREADY_DELETED_ERROR):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)
+
+class CantChangeStatusProfileIsInactive(Exception):
+    def __init__(self, message_key=CSVConstants.PROFILE_IS_INACTIVE_ERROR):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)
 

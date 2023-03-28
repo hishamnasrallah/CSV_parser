@@ -4,11 +4,12 @@ from datetime import datetime
 import pytz
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField, MapperTask, CeleryTaskStatus
+from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField, MapperTask, CeleryTaskStatus, \
+    MapperProfile, Profile
 from app.api.repositories.common import CRUD
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
-    CSVConfigMapperFieldsDoesNotExist
+    CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, ProfileAlreadyDeleted, CantChangeStatusProfileIsInactive
 from utils.delete_specific_task import cancel_task
 
 
@@ -155,10 +156,20 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
 def change_mapper_status(id, token, db):
     company_id = token["company"]["id"]
 
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id)
-    if not mapper_config.first():
+    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id).first()
+
+    if not mapper_config:
         raise CSVConfigDoesNotExist
-    mapper_config_obj = mapper_config.first()
+    linked_profile = db.query(MapperProfile).filter(MapperProfile.mapper_id == mapper_config.id).first()
+    if not linked_profile:
+        raise CantChangeStatusNoProfileAssigned
+    profile = db.query(Profile).filter(Profile.id == linked_profile.profile_id).first()
+    if profile.is_deleted:
+        raise ProfileAlreadyDeleted
+    if not mapper_config.is_active and not profile.is_active:
+        raise CantChangeStatusProfileIsInactive
+
+    mapper_config_obj = mapper_config
     if mapper_config_obj.is_active:
         mapper_config_obj.is_active = False
     elif not mapper_config_obj.is_active:
@@ -186,6 +197,10 @@ def update_config(request_body, id, token, db):
         mapper_config_obj = mapper_config.first()
         if "set_active_at" not in request_dict.keys() or request_dict["is_active"]:
             request_dict['set_active_at'] = None
+        profile_id = request_dict.pop("profile_id", None)
+        if not profile_id:
+            request_dict["is_active"] = False
+            request_dict["set_active_at"] = None
 
         for key, value in request_dict.items():
             setattr(mapper_config_obj, key, value)
@@ -247,8 +262,14 @@ def create_config(request_body, token, db):
     request_dict["company_id"] = token["company"]["id"]
     try:
         mapper = request_dict.pop("mapper", None)
+        profile_id = request_dict.pop("profile_id", None)
+        if not profile_id:
+            request_dict["is_active"] = False
         rec = ProcessConfig(**request_dict)
         file_config_rec = CRUD().add(rec)
+        if profile_id:
+            link_parser_with_profile = MapperProfile(mapper_id=file_config_rec.id, profile_id=profile_id)
+            link_parser_with_profile_rec = CRUD().add(link_parser_with_profile)
         if file_config_rec.set_active_at:
             task = mapper_activate.apply_async(args=(file_config_rec.id,),
                                                eta=file_config_rec.set_active_at.astimezone(pytz.utc))

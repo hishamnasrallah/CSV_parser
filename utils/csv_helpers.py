@@ -4,8 +4,13 @@ import os
 
 import chardet
 import paramiko
+
+from app.api.models import MapperProfile, Profile
+from app.api.repositories.common import CRUD
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
+from core.exceptions.csv import ProfileAlreadyDeleted, NoProfileAssigned
+from core.exceptions.profile import ProfileIsInactive
 from utils.sftp_server import SFTPHelper
 
 
@@ -67,9 +72,18 @@ class CSVHelper:
 
     def connect_to_sftp(self):
         self.sftp_helper = SFTPHelper()
-        self.sftp_helper.connect(server_ip=os.environ.get("DELMONTE_SFTP_IP"),
-                                 username=os.environ.get("DELMONTE_SFTP_USERNAME"),
-                                 password=os.environ.get("DELMONTE_SFTP_PASSWORD"))
+        db = CRUD().db_conn()
+        linked_profile = db.query(MapperProfile).filter(MapperProfile.mapper_id == self.file_id).first()
+        if not linked_profile:
+            raise NoProfileAssigned
+        profile = db.query(Profile).filter(Profile.id == linked_profile.profile_id).first()
+        if profile.is_deleted:
+            raise ProfileAlreadyDeleted
+        if not profile.is_active:
+            raise ProfileIsInactive
+        self.sftp_helper.connect(server_ip=profile.base_server_url,
+                                 username=profile.server_connection_username,
+                                 password=profile.server_connection_password)
         self.sftp_helper.change_dir(path=self.file_path)
 
     def copy_file_to_tmp_sftp(self):
@@ -163,5 +177,5 @@ class CSVHelper:
             self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
             x = self.send_data(self.company_id, self.process_id, mapped_data)
-
-            return x
+            response = {"file_name_as_received": self.file_name_as_received, "core_response": x}
+            return response
