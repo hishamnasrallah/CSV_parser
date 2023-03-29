@@ -23,11 +23,6 @@ def get_profile(profile_id: int, company_id, db):
     return jsonable_encoder(profile)
 
 
-# def get_profiles(company_id: int, db):
-#     profiles = db.query(Profile).filter(Profile.company_id == company_id, Profile.is_deleted == False).all()
-#     return jsonable_encoder(profiles)
-
-
 def get_profiles_filter(company_id, db, name_contains=None, is_active=None):
     if is_active is not None and name_contains:
         profiles = db.query(Profile).filter(Profile.company_id == company_id, Profile.is_deleted == False,
