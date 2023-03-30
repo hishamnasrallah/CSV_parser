@@ -36,14 +36,7 @@ def get_profile_by_id(request: Request, profile_id: int, db: Session = Depends(C
 def get_profiles_by_company(request: Request, is_active: bool = Query(None), name: str = Query(None), token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
     company_id = token["company"]["id"]
-    if is_active is not None and name:
-        data = profile.get_profiles_filter(company_id, db, name, is_active)
-    elif is_active is not None and not name:
-        data = profile.get_profiles_filter(company_id, db, is_active=is_active)
-    elif is_active is None and name:
-        data = profile.get_profiles_filter(company_id, db, name_contains=name)
-    else:
-        data = profile.get_profiles_filter(company_id, db)
+    data = profile.get_profiles_filter(company_id, db, name, is_active)
     return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 

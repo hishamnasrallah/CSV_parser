@@ -1,5 +1,5 @@
 from fastapi.encoders import jsonable_encoder
-
+from sqlalchemy.orm import Query
 from app.api.models import Profile
 from app.api.repositories.common import CRUD
 from core.exceptions.profile import ProfileDoesNotExist
@@ -24,20 +24,20 @@ def get_profile(profile_id: int, company_id, db):
 
 
 def get_profiles_filter(company_id, db, name_contains=None, is_active=None):
-    if is_active is not None and name_contains:
-        profiles = db.query(Profile).filter(Profile.company_id == company_id, Profile.is_deleted == False,
-                                            Profile.is_active == is_active,
-                                            Profile.profile_name.ilike(f'%{name_contains}%')
-                                            ).all()
-    elif is_active is not None and not name_contains:
-        profiles = db.query(Profile).filter(Profile.company_id == company_id, Profile.is_deleted == False,
-                                            Profile.is_active == is_active).all()
-    elif is_active is None and name_contains:
-        profiles = db.query(Profile).filter(Profile.company_id == company_id, Profile.is_deleted == False,
-                                            Profile.profile_name.ilike(f'%{name_contains}%')
-                                            ).all()
-    else:
-        profiles = db.query(Profile).filter(Profile.company_id == company_id, Profile.is_deleted == False).all()
+    base_query: Query = db.query(Profile).filter(
+        Profile.company_id == company_id,
+        Profile.is_deleted == False
+    )
+
+    if is_active is not None:
+        base_query = base_query.filter(Profile.is_active == is_active)
+
+    if name_contains:
+        base_query = base_query.filter(
+            Profile.profile_name.ilike(f'%{name_contains}%')
+        )
+
+    profiles = base_query.all()
     return jsonable_encoder(profiles)
 
 

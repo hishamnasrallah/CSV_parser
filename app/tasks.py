@@ -60,12 +60,12 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
     if time_diff_minutes > frequency or not last_run:
         csv_helper = CSVHelper(task_id=task_id, company_id=company_id, file_id=file_id, file_name=file_name,
                                file_path=file_path, process_id=process_id)
-        x = csv_helper.main()
-        if x == "No files":
-            result = f"NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
+        result = csv_helper.main()
+        if result == "No files":
+            final_result = f"NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
         else:
-            result = f"FILE: '{x['file_name_as_received']}' SENT to celery \n \n \n \n " + f"  {x['core_response'][:2]}"
-        return result
+            final_result = f"FILE: '{result['file_name_as_received']}' SENT to celery \n \n \n \n " + f"  {result['core_response'][:2]}"
+        return final_result
 
 @celery.task(name="set_mapper_active")
 def mapper_activate(mapper_id: int):

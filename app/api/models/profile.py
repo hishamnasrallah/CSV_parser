@@ -8,11 +8,11 @@ from json import dumps
 
 class Profile(BaseModelMixin, Base):
     company_id = Column(Integer)
-    profile_name = Column(String(255), nullable=False)
-    server_connection_username = Column(String(255), nullable=False)
-    server_connection_password = Column(String(255), nullable=False)
-    profile_description = Column(String(256), nullable=False)
-    base_server_url = Column(String(255), nullable=False)
+    profile_name = Column(String(255))
+    server_connection_username = Column(String(255))
+    server_connection_password = Column(String(255))
+    profile_description = Column(String(256))
+    base_server_url = Column(String(255))
     is_active = Column(Boolean, default=True)
     is_deleted = Column(Boolean, default=False)
 

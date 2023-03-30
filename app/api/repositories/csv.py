@@ -156,20 +156,19 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
 def change_mapper_status(id, token, db):
     company_id = token["company"]["id"]
 
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id).first()
+    mapper_config_obj = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id).first()
 
-    if not mapper_config:
+    if not mapper_config_obj:
         raise CSVConfigDoesNotExist
-    linked_profile = db.query(MapperProfile).filter(MapperProfile.mapper_id == mapper_config.id).first()
+    linked_profile = db.query(MapperProfile).filter(MapperProfile.mapper_id == mapper_config_obj.id).first()
     if not linked_profile:
         raise CantChangeStatusNoProfileAssigned
     profile = db.query(Profile).filter(Profile.id == linked_profile.profile_id).first()
     if profile.is_deleted:
         raise ProfileAlreadyDeleted
-    if not mapper_config.is_active and not profile.is_active:
+    if not mapper_config_obj.is_active and not profile.is_active:
         raise CantChangeStatusProfileIsInactive
 
-    mapper_config_obj = mapper_config
     if mapper_config_obj.is_active:
         mapper_config_obj.is_active = False
     elif not mapper_config_obj.is_active:
