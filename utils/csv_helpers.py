@@ -71,7 +71,6 @@ class CSVHelper:
                      self.tmp_path + "/" + self.file_name_as_received)
 
     def connect_to_sftp(self):
-        self.sftp_helper = SFTPHelper()
         db = CRUD().db_conn()
         linked_profile = db.query(MapperProfile).filter(MapperProfile.mapper_id == self.file_id).first()
         if not linked_profile:
@@ -81,11 +80,32 @@ class CSVHelper:
             raise ProfileAlreadyDeleted
         if not profile.is_active:
             raise ProfileIsInactive
-        self.sftp_helper.connect(server_ip=profile.base_server_url,
-                                 username=profile.server_connection_username,
-                                 password=profile.server_connection_password)
-        self.sftp_helper.change_dir(path=self.file_path)
 
+        with SFTPHelper() as sftp_helper:
+            sftp_helper.connect(server_ip=profile.base_server_url,
+                                username=profile.server_connection_username,
+                                password=profile.server_connection_password)
+            sftp_helper.change_dir(path=self.file_path)
+            self.sftp_helper = sftp_helper
+            new_files_names = self.read_files_by_prefix(prefix=self.file_name)
+            if not new_files_names:
+                self.task_status = "No files"
+                return self.task_status
+            for file_name in new_files_names:
+                self.file_name_as_received = file_name
+                # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
+                self.copy_file_to_tmp_sftp()
+                # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
+        data_headers = self.get_headers()
+        self.get_file_info()
+        mapped_data = self.read_file(file_name=file_name, headers=data_headers)
+
+        self.store_history()
+        self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
+
+        x = self.send_data(self.company_id, self.process_id, mapped_data)
+        response = {"file_name_as_received": self.file_name_as_received, "core_response": x}
+        return response
     def copy_file_to_tmp_sftp(self):
         self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
                                           file_name=self.file_name_as_received)
@@ -154,28 +174,5 @@ class CSVHelper:
     def main(self):
         self.get_tmp_path()
         # // TODO: use this function connect_to_sftp nestead of commented it
-        self.connect_to_sftp()
-
-
-        # // TODO: use this function read_files_by_prefix nestead of read_files_by_prefix_without_sftp
-        new_files_names = self.read_files_by_prefix(prefix=self.file_name)
-
-
-        if not new_files_names:
-            self.task_status = "No files"
-            return self.task_status
-        for file_name in new_files_names:
-            self.file_name_as_received = file_name
-            # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
-            self.copy_file_to_tmp_sftp()
-            # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
-            data_headers = self.get_headers()
-            self.get_file_info()
-            mapped_data = self.read_file(file_name=file_name, headers=data_headers)
-
-            self.store_history()
-            self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
-
-            x = self.send_data(self.company_id, self.process_id, mapped_data)
-            response = {"file_name_as_received": self.file_name_as_received, "core_response": x}
-            return response
+        result = self.connect_to_sftp()
+        return result

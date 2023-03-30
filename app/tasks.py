@@ -9,7 +9,8 @@ celery = create_celery()
 celery.conf.beat_schedule = {
     'check-csv-files-every-120-seconds': {
         'task': 'app.tasks.check_csv_files',
-        'schedule': 900.0,
+        'schedule': 30.0,
+        #// TODO: after fixing the seessions issue it should be returned to be 900.0 nested of 15.0
     },
 }
 
