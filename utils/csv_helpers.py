@@ -96,21 +96,19 @@ class CSVHelper:
                 # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
                 self.copy_file_to_tmp_sftp()
                 # // TODO: use this function copy_file_to_tmp_sftp nestead of copy_file_to_tmp_without_sftp
-        data_headers = self.get_headers()
-        self.get_file_info()
-        mapped_data = self.read_file(file_name=file_name, headers=data_headers)
+                data_headers = self.get_headers()
+                self.get_file_info()
+                mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
-        self.store_history()
-        self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
+                self.store_history()
+                self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
-        x = self.send_data(self.company_id, self.process_id, mapped_data)
-        response = {"file_name_as_received": self.file_name_as_received, "core_response": x}
-        return response
+                x = self.send_data(self.company_id, self.process_id, mapped_data)
+                response = {"file_name_as_received": self.file_name_as_received, "core_response": x}
+                return response
     def copy_file_to_tmp_sftp(self):
-        self.sftp_helper.copy_file_from_server(path=self.file_path, tmp_path=self.tmp_path,
-                                          file_name=self.file_name_as_received)
+        self.sftp_helper.copy_file_from_server(file_name=self.file_name_as_received)
 
-        self.sftp_helper.close_connection()
 
     def remove_temp_file(self, full_file_path):
         os.unlink(full_file_path)
