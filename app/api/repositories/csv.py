@@ -200,7 +200,14 @@ def update_config(request_body, id, token, db):
         if not profile_id:
             request_dict["is_active"] = False
             request_dict["set_active_at"] = None
-
+        else:
+            mapper_profile_obj = db.query(MapperProfile).filter(MapperProfile.mapper_id == mapper_config_obj.id).first()
+            if not mapper_profile_obj:
+                link_parser_with_profile = MapperProfile(mapper_id=mapper_config_obj.id, profile_id=profile_id)
+                link_parser_with_profile_rec = CRUD().add(link_parser_with_profile)
+            else:
+                mapper_profile_obj.profile_id = profile_id
+                db.commit()
         for key, value in request_dict.items():
             setattr(mapper_config_obj, key, value)
         db.commit()
