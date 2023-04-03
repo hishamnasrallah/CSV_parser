@@ -62,7 +62,7 @@ class CSVHelper:
         mappers = get_file_mapper(self.file_id)
         list_header_fields = []
         for mapper in mappers:
-            list_header_fields.append({"column_name": mapper.map_field_name, "is_ignored": mapper.is_ignored})
+            list_header_fields.append({"column_name": mapper.field_name, "mapper_field_name": mapper.map_field_name, "is_ignored": mapper.is_ignored})
         return list_header_fields
 
     def copy_file_to_tmp_without_sftp(self):
@@ -114,28 +114,45 @@ class CSVHelper:
         os.unlink(full_file_path)
 
     def read_file(self, file_name=None, headers=None):
-        with open(f"{self.current_dir}/tmp/{file_name}", "rb") as file:
-            file_content = file.read()
-            detected_encoding = chardet.detect(file_content)['encoding']
-            file_content = file_content.decode(detected_encoding)
+        if file_name.endswith('.csv'):
+            with open(f"{self.current_dir}/tmp/{file_name}", "rb") as file:
+                file_content = file.read()
+                detected_encoding = chardet.detect(file_content)['encoding']
+                file_content = file_content.decode(detected_encoding)
 
-            keys = headers
-            headers = []
-            for each_key in keys:
-                headers.append(each_key)
+                mapped_data = []
+                reader = csv.reader(file_content.splitlines(), delimiter=',', skipinitialspace=True)
+                header_row = next(reader)  # read the header row
+                for each_line in reader:
+                    each_record = dict()
+                    for column_name in headers:
+                        if column_name["is_ignored"] != True:
+                            index = header_row.index(column_name["column_name"])
+                            value = each_line[index]
+                            if value.startswith('="') and value.endswith('"'):
+                                value = value[2:-1]
+                            each_record[column_name["column_name"]] = value
+                    mapped_data.append(each_record)
+            return mapped_data
+        elif file_name.endswith('.man'):
+            with open(f"{self.current_dir}/tmp/{file_name}", "r") as file:
+                file_content = file.readlines()
+                mapped_data = []
+                header_row = file_content[0].strip().split('\t')  # read the header row
+                column_indices = [header_row.index(column["column_name"]) for column in headers if
+                                  not column["is_ignored"]]
+                for line in file_content[1:]:
+                    each_record = dict()
+                    line_values = line.strip().split('\t')
+                    for i, index in enumerate(column_indices):
+                        column_name = headers[i]["column_name"]
+                        value = line_values[index]
+                        if value.startswith('="') and value.endswith('"'):
+                            value = value[2:-1]
+                        each_record[column_name] = value
+                    mapped_data.append(each_record)
+            return mapped_data
 
-            mapped_data = []
-            reader = csv.reader(file_content.splitlines(), delimiter=',', skipinitialspace=True)
-            for each_line in reader:
-                each_record = dict()
-                column_index = 0
-                for each_column in each_line:
-                    if column_index < len(headers):
-                        if headers[column_index]["is_ignored"] != True:
-                            each_record[headers[column_index]["column_name"]] = each_column
-                        column_index += 1
-                mapped_data.append(each_record)
-        return mapped_data
 
     def send_data(self, company_id, process_id, data):
         responses = []

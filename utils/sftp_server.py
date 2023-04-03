@@ -27,7 +27,9 @@ class SFTPHelper:
     def read_files_by_prefix_sftp(self, prefix):
         files = []
         for filename in self.sftp.listdir():
-            if filename.startswith(prefix):
+            if prefix in filename:
+            # if filename.startswith(prefix):
+            #// TODO: remove comment line if this accepted by abdallah
                 with self.sftp.open(filename) as f:
                     file_name = filename
                     files.append(file_name)
