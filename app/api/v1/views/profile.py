@@ -33,11 +33,12 @@ def get_profile_by_id(request: Request, profile_id: int, db: Session = Depends(C
 
 
 @router.get("/profiles/", response_model=MapperProfileResponse)
-def get_profiles_by_company(request: Request, is_active: bool = Query(None), name: str = Query(None), token=Depends(validate_authorization),
+def get_profiles_by_company(request: Request, is_active: bool = Query(None), name: str = Query(None),
+                            all:bool = Query(None), token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
     company_id = token["company"]["id"]
     data = profile.get_profiles_filter(company_id, db, name, is_active)
-    return http_response(request=request, data=data, status=status.HTTP_200_OK,
+    return http_response(request=request, all=all, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
