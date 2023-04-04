@@ -128,10 +128,11 @@ class CSVHelper:
                     for column_name in headers:
                         if column_name["is_ignored"] != True:
                             index = header_row.index(column_name["column_name"])
-                            value = each_line[index]
-                            if value.startswith('="') and value.endswith('"'):
-                                value = value[2:-1]
-                            each_record[column_name["column_name"]] = value
+                            if index < len(each_line):
+                                value = each_line[index]
+                                if value.startswith('="') and value.endswith('"'):
+                                    value = value[2:-1]
+                                each_record[column_name["column_name"]] = value
                     mapped_data.append(each_record)
             return mapped_data
         elif file_name.endswith('.man'):
@@ -146,10 +147,11 @@ class CSVHelper:
                     line_values = line.strip().split('\t')
                     for i, index in enumerate(column_indices):
                         column_name = headers[i]["column_name"]
-                        value = line_values[index]
-                        if value.startswith('="') and value.endswith('"'):
-                            value = value[2:-1]
-                        each_record[column_name] = value
+                        if index < len(line_values):
+                            value = line_values[index]
+                            if value.startswith('="') and value.endswith('"'):
+                                value = value[2:-1]
+                            each_record[column_name] = value
                     mapped_data.append(each_record)
             return mapped_data
 
