@@ -29,7 +29,7 @@ def convert_dict_to_camel_case(data):
     else:
         return data
 
-def http_response(message, status, language: Language = "en", data: Any = None, request: Request = None,
+def http_response(message, status, language: Language = "en", data: Any = None, request: Request = None, all:bool = False,
                   request_id: str = None, meta: Any = None):
     if not 200 <= status <= 299:
         return http_error_response(error_message=message, status=status, language=language)
@@ -48,7 +48,7 @@ def http_response(message, status, language: Language = "en", data: Any = None, 
             pass
 
     if data:
-        if request:
+        if request and not all:
             paginated_data = paginator(request, data)
             data = convert_dict_to_camel_case(paginated_data)
             response = {
