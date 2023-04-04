@@ -35,7 +35,7 @@ def create_new_file_process(request: Request, id:int,
 
 
 @router.put("/mappers/{id}/", response_model=FileTaskConfigResponse)
-def create_new_file_process(request: Request, id:int,  request_body: FileTaskConfigRequest,
+def mapper_update(request: Request, id:int,  request_body: FileTaskConfigRequest,
                             token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
 

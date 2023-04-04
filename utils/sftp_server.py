@@ -15,14 +15,13 @@ class SFTPHelper:
     def change_dir(self, path="transfer/napproai"):
         self.sftp.chdir(path)
 
-    def copy_file_from_server(self, path, tmp_path, file_name):
+    def copy_file_from_server(self, file_name):
         current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         os.makedirs(f'{current_dir}/tmp', exist_ok=True)
 
-        try:
-            self.sftp.get(f"{file_name}", f"{current_dir}/tmp/{file_name}")
-        finally:
-            self.close_connection()
+
+        self.sftp.get(f"{file_name}", f"{current_dir}/tmp/{file_name}")
+
 
 
     def read_files_by_prefix_sftp(self, prefix):
@@ -38,3 +37,9 @@ class SFTPHelper:
     def close_connection(self):
         self.sftp.close()
         self.client.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close_connection()

@@ -1,4 +1,4 @@
-from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus
+from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile
 from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
 from utils.csv_helpers import CSVHelper
@@ -9,7 +9,8 @@ celery = create_celery()
 celery.conf.beat_schedule = {
     'check-csv-files-every-120-seconds': {
         'task': 'app.tasks.check_csv_files',
-        'schedule': 900.0,
+        'schedule': 30.0,
+        #// TODO: after fixing the seessions issue it should be returned to be 900.0 nested of 15.0
     },
 }
 
@@ -60,12 +61,12 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
     if time_diff_minutes > frequency or not last_run:
         csv_helper = CSVHelper(task_id=task_id, company_id=company_id, file_id=file_id, file_name=file_name,
                                file_path=file_path, process_id=process_id)
-        x = csv_helper.main()
-        if x == "No files":
-            result = f"{x} NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
+        result = csv_helper.main()
+        if result == "No files":
+            final_result = f"NO NEW file with prefix: '{file_name}'  with this path '{file_path}'"
         else:
-            result = f"{x} FILE: '{file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
-        return result
+            final_result = f"FILE: '{result['file_name_as_received']}' SENT to celery \n \n \n \n " + f"  {result['core_response'][:2]}"
+        return final_result
 
 @celery.task(name="set_mapper_active")
 def mapper_activate(mapper_id: int):
@@ -81,18 +82,27 @@ def mapper_activate(mapper_id: int):
     if not mapper_task:
         pass
     else:
-        mapper_task_obj = mapper_task.first()
-        mapper_task_status = mapper_task_obj.status
-        if mapper_task_status != CeleryTaskStatus.revoked:
-            mapper_obj.is_active = True
-            db.commit()
+        linked_profile = db.query(MapperProfile).filter(MapperProfile.mapper_id == mapper_id).first()
+        if linked_profile:
+            profile = db.query(Profile).filter(Profile.id == linked_profile.profile_id).first()
+            if profile.is_deleted:
+                return {"mapper": mapper_obj.file_name, "status": "Cant change status, profile is deleted."}
+            if not mapper_obj.is_active and not profile.is_active:
+                return {"mapper": mapper_obj.file_name, "status": "Cant change status, profile is inactive."}
+            mapper_task_obj = mapper_task.first()
+            mapper_task_status = mapper_task_obj.status
+            if mapper_task_status != CeleryTaskStatus.revoked:
+                mapper_obj.is_active = True
+                db.commit()
 
-            mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == mapper_obj.company_id,
-                                                        MapperTask.task_name == "set_mapper_active",
-                                                        MapperTask.file_id == mapper_obj.id,
-                                                        MapperTask.status == CeleryTaskStatus.received)
-            mapper_tasks.update({MapperTask.status: CeleryTaskStatus.success})
-            db.commit()
+                mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == mapper_obj.company_id,
+                                                            MapperTask.task_name == "set_mapper_active",
+                                                            MapperTask.file_id == mapper_obj.id,
+                                                            MapperTask.status == CeleryTaskStatus.received)
+                mapper_tasks.update({MapperTask.status: CeleryTaskStatus.success})
+                db.commit()
 
-    return {"mapper": mapper_obj.file_name, "status": "Activated"}
+            return {"mapper": mapper_obj.file_name, "status": "Activated"}
+        else:
+            return {"mapper": mapper_obj.file_name, "status": "Cant change status, no profile linked."}
 

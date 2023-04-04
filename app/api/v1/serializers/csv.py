@@ -44,12 +44,18 @@ class FileTaskConfigRequest(BaseModel):
     )
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
+    profile_id: Optional[int] = None
+
     @validator('set_active_at', always=True)
     def check_future_datetime(cls, v, values):
         if v is not None and v <= datetime.datetime.now():
             raise ValueError('Set active datetime must be in the future')
         return v
-
+    @validator('profile_id', always=True)
+    def check_profile_id(cls, v, values):
+        if values.get('is_active') and not v:
+            raise ValueError('Profile id is mandatory when isActive is True')
+        return v
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]
@@ -65,6 +71,7 @@ class FileTaskConfigBaseResponse(BaseModel):
     )
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
+
 
 class FileTaskConfigResponse(BaseResponse):
     data: List[FileTaskConfigBaseResponse]
@@ -83,6 +90,7 @@ class Dashboard(BaseModel):
     )
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
+
 
 class DashboardResponse(BaseResponse):
     data: List[Dashboard]
