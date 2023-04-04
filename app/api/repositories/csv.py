@@ -48,10 +48,19 @@ def mapper_details(token, id, db):
         raise CSVConfigDoesNotExist
 
     mapper_fields = db.query(ProcessMapField).filter(ProcessMapField.file_id == id).all()
+    profile = db.query(Profile).filter(
+        Profile.company_id == token["company"]["id"],
+        Profile.is_deleted == False
+    ).first()
+    if profile:
+        profile_id = profile.id
+    else:
+        profile_id = None
     if not mapper_config:
         raise CSVConfigMapperFieldsDoesNotExist
     mapper_config = jsonable_encoder(mapper_config)
     mapper_config["mapper"] = jsonable_encoder(mapper_fields)
+    mapper_config["profile_id"] = jsonable_encoder(profile_id)
     return jsonable_encoder(mapper_config)
 
 
