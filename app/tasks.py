@@ -1,7 +1,6 @@
 from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile
 from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
-from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
 from sqlalchemy.orm import Session
 
@@ -49,6 +48,8 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
     :return: after checking the time difference between system time and the last run.
     if it greater than the frequency the function wil run.
     """
+    from utils.csv_helpers import CSVHelper
+
     task_id = celery.current_task.request.id
 
     time_diff_minutes = 0
