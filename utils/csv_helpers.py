@@ -155,15 +155,13 @@ class CSVHelper:
                     mapped_data.append(each_record)
             return mapped_data
 
-
     def send_data(self, company_id, process_id, data):
         responses = []
         for _obj in data:
-            response = send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
+            response = send_collected_data.delay(company_id=company_id, process_id=process_id, data=_obj)
             responses.append(response)
 
         return responses
-
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
