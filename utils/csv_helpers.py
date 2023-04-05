@@ -1,14 +1,12 @@
 import codecs
 import csv
 import os
-
 import chardet
-import paramiko
-
 from app.api.models import MapperProfile, Profile
 from app.api.repositories.common import CRUD
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
-from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
+from app.tasks import send_collected_data
+# from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
 from core.exceptions.csv import ProfileAlreadyDeleted, NoProfileAssigned
 from core.exceptions.profile import ProfileIsInactive
 from utils.sftp_server import SFTPHelper

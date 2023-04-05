@@ -1,3 +1,5 @@
+import os
+import requests
 from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile
 from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
@@ -107,3 +109,13 @@ def mapper_activate(mapper_id: int):
         else:
             return {"mapper": mapper_obj.file_name, "status": "Cant change status, no profile linked."}
 
+@celery.task(name='send row')
+def send_collected_data(company_id, process_id, data):
+    host = os.environ.get('PRIVATE_CORE_ENDPOINT')
+    headers = {
+        "Host": "parser:8000"
+    }
+    url = f"http://backend-app-private:8000/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+
+    response = requests.request("POST", url, headers=headers, data=data)
+    return "response"
