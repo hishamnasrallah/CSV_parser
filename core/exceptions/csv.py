@@ -58,7 +58,7 @@ class InvalidAuthentication(Exception):
 class CantChangeStatusNoProfileAssigned(Exception):
     def __init__(self, message_key=CSVConstants.CANT_CHANGE_STATUS_NO_ASSIGNED_PROFILE):
         self.message_key = message_key
-        self.status = 404
+        self.status = 400
 
         super().__init__(self.message_key, self.status)
 
@@ -66,7 +66,7 @@ class CantChangeStatusNoProfileAssigned(Exception):
 class NoProfileAssigned(Exception):
     def __init__(self, message_key=CSVConstants.NO_ASSIGNED_PROFILE):
         self.message_key = message_key
-        self.status = 404
+        self.status = 400
 
         super().__init__(self.message_key, self.status)
 
@@ -74,14 +74,14 @@ class NoProfileAssigned(Exception):
 class ProfileAlreadyDeleted(Exception):
     def __init__(self, message_key=CSVConstants.PROFILE_ALREADY_DELETED_ERROR):
         self.message_key = message_key
-        self.status = 404
+        self.status = 400
 
         super().__init__(self.message_key, self.status)
 
 class CantChangeStatusProfileIsInactive(Exception):
     def __init__(self, message_key=CSVConstants.PROFILE_IS_INACTIVE_ERROR):
         self.message_key = message_key
-        self.status = 404
+        self.status = 400
 
         super().__init__(self.message_key, self.status)
 
