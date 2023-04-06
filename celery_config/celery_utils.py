@@ -2,7 +2,6 @@ from celery import current_app as current_celery_app
 from core.settings.base import settings
 
 
-
 def create_celery():
     celery_app = current_celery_app
     celery_app.conf.broker_url = settings.celery["CELERY_BROKER_URL"]

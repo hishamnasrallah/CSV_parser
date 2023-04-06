@@ -1,7 +1,8 @@
+import os
+import requests
 from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile
 from app.api.repositories.common import CRUD
 from celery_config.celery_utils import create_celery
-from utils.csv_helpers import CSVHelper
 from utils.time_difference import time_difference_in_minutes
 from sqlalchemy.orm import Session
 
@@ -49,6 +50,8 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
     :return: after checking the time difference between system time and the last run.
     if it greater than the frequency the function wil run.
     """
+    from utils.csv_helpers import CSVHelper
+
     task_id = celery.current_task.request.id
 
     time_diff_minutes = 0
@@ -106,3 +109,13 @@ def mapper_activate(mapper_id: int):
         else:
             return {"mapper": mapper_obj.file_name, "status": "Cant change status, no profile linked."}
 
+@celery.task(name='send row')
+def send_collected_data(company_id, process_id, data):
+    host = os.environ.get('PRIVATE_CORE_ENDPOINT')
+    headers = {
+        "Host": "parser:8000"
+    }
+    url = f"http://backend-app-private:8000/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+
+    response = requests.request("POST", url, headers=headers, data=data)
+    return {"core_response": str(response)}

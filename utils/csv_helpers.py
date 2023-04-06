@@ -1,14 +1,12 @@
 import codecs
 import csv
 import os
-
 import chardet
-import paramiko
-
 from app.api.models import MapperProfile, Profile
 from app.api.repositories.common import CRUD
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
-from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
+from app.tasks import send_collected_data
+# from app.brokers.decapolis_core import CoreApplicationBroker, send_collected_data
 from core.exceptions.csv import ProfileAlreadyDeleted, NoProfileAssigned
 from core.exceptions.profile import ProfileIsInactive
 from utils.sftp_server import SFTPHelper
@@ -155,15 +153,13 @@ class CSVHelper:
                     mapped_data.append(each_record)
             return mapped_data
 
-
     def send_data(self, company_id, process_id, data):
         responses = []
         for _obj in data:
-            response = send_collected_data(company_id=company_id, process_id=process_id, data=_obj)
+            response = send_collected_data.delay(company_id=company_id, process_id=process_id, data=_obj)
             responses.append(response)
 
         return responses
-
 
     def store_history(self):
         create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
