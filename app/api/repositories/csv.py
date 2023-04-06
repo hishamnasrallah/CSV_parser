@@ -5,11 +5,12 @@ import pytz
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField, MapperTask, CeleryTaskStatus, \
-    MapperProfile, Profile
+    MapperProfile, Profile, Status
 from app.api.repositories.common import CRUD
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
-    CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, ProfileAlreadyDeleted, CantChangeStatusProfileIsInactive
+    CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, ProfileAlreadyDeleted, \
+    CantChangeStatusProfileIsInactive
 from utils.delete_specific_task import cancel_task
 
 
@@ -137,11 +138,30 @@ def get_company_processes(token, request):
     return jsonable_encoder(response)
 
 
-def create_file_history(file_id, file_size, file_name_as_received, task_id="1"):
+def create_file_history(file_id, file_size, file_name_as_received, total_rows, task_id="1"):
     history_rec = FileReceiveHistory(file_id=file_id, file_size_kb=file_size,
-                                     file_name_as_received=file_name_as_received, task_id=task_id)
+                                     file_name_as_received=file_name_as_received, total_rows=total_rows,
+                                     total_success=0, total_failure=0, task_id=task_id)
     history_rec = CRUD().add(history_rec)
     return history_rec
+
+
+def update_file_history_rows_number_based_on_status(id, status, db):
+    history = db.query(FileReceiveHistory).filter(FileReceiveHistory.id == id).first()
+    if not history:
+        raise "batata"
+    if status == Status.success:
+        history.total_success += 1
+    else:
+        history.total_failure += 1
+    db.commit()
+
+
+# def create_row_history(file_id, row_number, mapped_data):
+#     history_rec = FileRowsHistory(file_history_id=file_id, row_number=row_number,
+#                                      mapped_data=mapped_data)
+#     history_rec = CRUD().add(history_rec)
+#     return history_rec
 
 
 def update_last_run(file_config_id, db=CRUD().db_conn()):
@@ -165,7 +185,8 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
 def change_mapper_status(id, token, db):
     company_id = token["company"]["id"]
 
-    mapper_config_obj = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id).first()
+    mapper_config_obj = db.query(ProcessConfig).filter(ProcessConfig.id == id,
+                                                       ProcessConfig.company_id == company_id).first()
 
     if not mapper_config_obj:
         raise CSVConfigDoesNotExist
@@ -222,9 +243,9 @@ def update_config(request_body, id, token, db):
         db.commit()
         if not request_dict['set_active_at'] and not request_dict["is_active"]:
             mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == int(request_dict["company_id"]),
-                                                        MapperTask.task_name == "set_mapper_active",
-                                                        MapperTask.file_id == mapper_config_obj.id,
-                                                        MapperTask.status == CeleryTaskStatus.received)
+                                                       MapperTask.task_name == "set_mapper_active",
+                                                       MapperTask.file_id == mapper_config_obj.id,
+                                                       MapperTask.status == CeleryTaskStatus.received)
             task_id_list = [task.task_id for task in mapper_tasks]
             cancel_task(task_id_list)
             mapper_tasks.update({MapperTask.status: CeleryTaskStatus.revoked})
@@ -232,7 +253,8 @@ def update_config(request_body, id, token, db):
         elif mapper_config_obj.set_active_at:
             task = mapper_activate.apply_async(args=(mapper_config_obj.id,),
                                                eta=mapper_config_obj.set_active_at.astimezone(pytz.utc))
-            mapper_task = MapperTask(company_id=int(request_dict["company_id"]), task_id=str(task), file_id=mapper_config_obj.id,
+            mapper_task = MapperTask(company_id=int(request_dict["company_id"]), task_id=str(task),
+                                     file_id=mapper_config_obj.id,
                                      task_name="set_mapper_active",
                                      status=CeleryTaskStatus.received)
 
@@ -240,9 +262,9 @@ def update_config(request_body, id, token, db):
             task_id = task.id
         elif request_dict["is_active"]:
             mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == int(request_dict["company_id"]),
-                                                        MapperTask.task_name == "set_mapper_active",
-                                                        MapperTask.file_id == mapper_config_obj.id,
-                                                        MapperTask.status == CeleryTaskStatus.received)
+                                                       MapperTask.task_name == "set_mapper_active",
+                                                       MapperTask.file_id == mapper_config_obj.id,
+                                                       MapperTask.status == CeleryTaskStatus.received)
             task_id_list = [task.task_id for task in mapper_tasks]
             cancel_task(task_id_list)
             mapper_tasks.update({MapperTask.status: CeleryTaskStatus.revoked})

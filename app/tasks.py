@@ -1,7 +1,8 @@
 import os
 import requests
-from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile
+from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile, Status
 from app.api.repositories.common import CRUD
+from app.api.repositories.csv import update_file_history_rows_number_based_on_status
 from celery_config.celery_utils import create_celery
 from utils.time_difference import time_difference_in_minutes
 from sqlalchemy.orm import Session
@@ -110,12 +111,23 @@ def mapper_activate(mapper_id: int):
             return {"mapper": mapper_obj.file_name, "status": "Cant change status, no profile linked."}
 
 @celery.task(name='send row')
-def send_collected_data(company_id, process_id, data):
+def send_collected_data(company_id, process_id, row_number, history_id, data):
     host = os.environ.get('PRIVATE_CORE_ENDPOINT')
     headers = {
         "Host": "parser:8000"
     }
     url = f"http://backend-app-private:8000/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
-
-    response = requests.request("POST", url, headers=headers, data=data)
+    try:
+        response = requests.request("POST", url, headers=headers, data=data)
+        if response.status_code == 201:
+            status = Status.success
+        else:
+            status = Status.failed
+        db = CRUD().db_conn()
+        update_file_history_rows_number_based_on_status(history_id, status, db)
+    except:
+        status = Status.failed
+        db = CRUD().db_conn()
+        update_file_history_rows_number_based_on_status(history_id, status, db)
+        response = "connection error"
     return {"core_response": str(response)}

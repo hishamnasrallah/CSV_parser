@@ -27,6 +27,7 @@ class CSVHelper:
         self.process_id = process_id
         self.timeout = 0
         self.current_dir = None
+        self.history_rec = None
 
     def read_files_by_prefix(self, prefix):
         files = self.sftp_helper.read_files_by_prefix_sftp(prefix)
@@ -98,7 +99,6 @@ class CSVHelper:
                 self.get_file_info()
                 mapped_data = self.read_file(file_name=file_name, headers=data_headers)
 
-                self.store_history()
                 self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
                 x = self.send_data(self.company_id, self.process_id, mapped_data)
@@ -132,7 +132,6 @@ class CSVHelper:
                                     value = value[2:-1]
                                 each_record[column_name["column_name"]] = value
                     mapped_data.append(each_record)
-            return mapped_data
         elif file_name.endswith('.man'):
             with open(f"{self.current_dir}/tmp/{file_name}", "r") as file:
                 file_content = file.readlines()
@@ -151,19 +150,24 @@ class CSVHelper:
                                 value = value[2:-1]
                             each_record[column_name] = value
                     mapped_data.append(each_record)
-            return mapped_data
+        self.history_rec = self.store_history(mapped_data)
+
+        return mapped_data
 
     def send_data(self, company_id, process_id, data):
         responses = []
-        for _obj in data:
-            response = send_collected_data.delay(company_id=company_id, process_id=process_id, data=_obj)
+        for idx, _obj in enumerate(data):
+            response = send_collected_data.delay(company_id=company_id, process_id=process_id, data=_obj,
+                                                 row_number=idx+1, history_id=self.history_rec.id)
             responses.append(response)
 
         return responses
 
-    def store_history(self):
-        create_file_history(self.file_id, self.file_size, self.file_name_as_received, task_id=self.task_id)
+    def store_history(self, mapped_data):
+        total_rows = len(mapped_data)
+        history_rec = create_file_history(self.file_id, self.file_size, self.file_name_as_received, total_rows=total_rows, task_id=self.task_id)
         update_last_run(self.file_id)
+        return history_rec
 
     def get_tmp_path(self):
         self.current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

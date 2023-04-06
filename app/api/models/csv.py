@@ -1,8 +1,12 @@
 import datetime
 
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy import func
+
 from app.api.models.common import BaseModelMixin
+from app.api.repositories.common import CRUD
 from core.database.settings.base import Base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, BigInteger
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, BigInteger, JSON
 import enum
 from json import dumps
 
@@ -52,8 +56,20 @@ class ProcessMapField(BaseModelMixin, Base):
         return data
 
 
+class Status(int, enum.Enum):
+    pending = 1
+    in_progress = 2
+    success = 3
+    failed = 4
+
+
 class FileReceiveHistory(BaseModelMixin, Base):
     file_id = Column(Integer, index=True)
     file_size_kb = Column(BigInteger, nullable=True)
     file_name_as_received = Column(String(length=255), nullable=True)
     task_id = Column(String(length=255), nullable=True)
+    total_rows = Column(Integer)
+    total_success = Column(Integer)
+    total_failure = Column(Integer)
+    history_status = Column(Enum(Status), default=Status.pending)
+
