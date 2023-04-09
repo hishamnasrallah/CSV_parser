@@ -12,12 +12,7 @@ class FileTaskConfig(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
-    description: str = Field(
-        ...,
-        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
-        error_msg = "Only English text is allowed"
-
-    )
+    description: str
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
 
@@ -36,12 +31,7 @@ class FileTaskConfigRequest(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
-    description: str = Field(
-        ...,
-        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
-        error_msg="Only English text is allowed"
-
-    )
+    description: str
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
     profile_id: Optional[int] = None
@@ -63,12 +53,7 @@ class FileTaskConfigBaseResponse(BaseModel):
     frequency: Frequency
     file_path: str
     process_id: int
-    description: str = Field(
-        ...,
-        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
-        error_msg="Only English text is allowed"
-
-    )
+    description: str
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
 
@@ -82,12 +67,7 @@ class Dashboard(BaseModel):
     file_path: str
     frequency: Frequency
     process_id: int
-    description: str = Field(
-        ...,
-        regex=MAPPER_DESCRIPTION_VALIDATION_REGEX,
-        error_msg="Only English text is allowed"
-
-    )
+    description: str
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
 
