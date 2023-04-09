@@ -10,6 +10,7 @@ from app.api.repositories.common import CRUD
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
     CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, ProfileAlreadyDeleted, CantChangeStatusProfileIsInactive
+from core.exceptions.profile import ProfileDoesNotExist
 from utils.delete_specific_task import cancel_task
 
 
@@ -48,14 +49,14 @@ def mapper_details(token, id, db):
         raise CSVConfigDoesNotExist
 
     mapper_fields = db.query(ProcessMapField).filter(ProcessMapField.file_id == id).all()
-    profile = db.query(Profile).filter(
-        Profile.company_id == token["company"]["id"],
-        Profile.is_deleted == False
+    mapper_profile = db.query(MapperProfile).filter(
+        MapperProfile.mapper_id == mapper_config.id
     ).first()
-    if profile:
-        profile_id = profile.id
-    else:
+    if not mapper_profile:
         profile_id = None
+    else:
+        profile_id = mapper_profile.profile_id
+
     if not mapper_config:
         raise CSVConfigMapperFieldsDoesNotExist
     mapper_config = jsonable_encoder(mapper_config)
