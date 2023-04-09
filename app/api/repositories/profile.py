@@ -61,7 +61,6 @@ def delete_profile(profile_id: int, company_id, db):
     if not profile:
         raise ProfileDoesNotExist
     profile.is_deleted = True
-    db.commit()
     db.query(MapperProfile).filter(MapperProfile.profile_id == profile_id).delete()
     db.commit()
     return {"detail": "Profile deleted successfully"}
