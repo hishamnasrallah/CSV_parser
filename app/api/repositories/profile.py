@@ -1,6 +1,6 @@
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Query
-from app.api.models import Profile
+from app.api.models import Profile, MapperProfile
 from app.api.repositories.common import CRUD
 from core.exceptions.profile import ProfileDoesNotExist
 
@@ -61,6 +61,8 @@ def delete_profile(profile_id: int, company_id, db):
     if not profile:
         raise ProfileDoesNotExist
     profile.is_deleted = True
+    db.commit()
+    db.query(MapperProfile).filter(MapperProfile.profile_id == profile_id).delete()
     db.commit()
     return {"detail": "Profile deleted successfully"}
 

@@ -55,14 +55,7 @@ def mapper_details(token, id, db):
     if not mapper_profile:
         profile_id = None
     else:
-        profile = db.query(Profile).filter(
-            Profile.company_id == token["company"]["id"], Profile.id == mapper_profile.profile_id,
-            Profile.is_deleted is False,
-        ).first()
-        if not profile:
-            profile_id = None
-        else:
-            profile_id = profile.id
+        profile_id = mapper_profile.profile_id
 
     if not mapper_config:
         raise CSVConfigMapperFieldsDoesNotExist
