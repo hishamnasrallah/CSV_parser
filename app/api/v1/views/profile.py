@@ -28,7 +28,7 @@ def create_new_profile(request: Request, request_body: MapperProfile,
 def get_profile_by_id(request: Request, profile_id: int, db: Session = Depends(CRUD().db_conn), token=Depends(validate_authorization)):
     company_id = token["company"]["id"]
     data = profile.get_profile(profile_id, company_id, db)
-    return http_response(request=request, data=data, status=status.HTTP_200_OK,
+    return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
 
