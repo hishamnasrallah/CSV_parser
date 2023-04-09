@@ -12,27 +12,34 @@ class Language(str, Enum):
     ar: str = "ar"
     en: str = "en"
 
+
 def convert_dict_to_camel_case(data):
     if isinstance(data, dict):
         new_data = {}
         for key, value in data.items():
             new_key = pydash.camel_case(key)
-            new_value = convert_dict_to_camel_case(value) if isinstance(value, (dict, list)) else value
+            new_value = convert_dict_to_camel_case(value) if isinstance(value,
+                                                                        (dict,
+                                                                         list)) else value
             new_data[new_key] = new_value
         return new_data
     elif isinstance(data, list):
         new_data = []
         for item in data:
-            new_value = convert_dict_to_camel_case(item) if isinstance(item, (dict, list)) else item
+            new_value = convert_dict_to_camel_case(item) if isinstance(item, (
+            dict, list)) else item
             new_data.append(new_value)
         return new_data
     else:
         return data
 
-def http_response(message, status, language: Language = "en", data: Any = None, request: Request = None, all:bool = False,
+
+def http_response(message, status, language: Language = "en", data: Any = None,
+                  request: Request = None, all: bool = False,
                   request_id: str = None, meta: Any = None):
     if not 200 <= status <= 299:
-        return http_error_response(error_message=message, status=status, language=language)
+        return http_error_response(error_message=message, status=status,
+                                   language=language)
 
     mapper = ResponseConstants.messages_dict()
 
@@ -92,7 +99,8 @@ def http_response(message, status, language: Language = "en", data: Any = None, 
     return JSONResponse(status_code=status, content=response, headers=headers)
 
 
-def http_error_response(error_message, status, language="en", request_id: str = None):
+def http_error_response(error_message, status, language="en",
+                        request_id: str = None):
     if 400 <= status <= 499:
         try:
             error_message = error_message[language]
@@ -105,7 +113,9 @@ def http_error_response(error_message, status, language="en", request_id: str = 
         "message": error_message,
         "request-id": request_id if request_id else generate_request_id()
     }
-    return JSONResponse(status_code=status, content=response)
+    return JSONResponse(status_code=status, content=response,
+                        headers={"access-control-allow-origin": "*",
+                                 "access-control-allow-credentials": "true"})
 
 
 def generate_request_id():
