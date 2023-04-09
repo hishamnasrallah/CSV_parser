@@ -157,13 +157,6 @@ def update_file_history_rows_number_based_on_status(id, status, db):
     db.commit()
 
 
-# def create_row_history(file_id, row_number, mapped_data):
-#     history_rec = FileRowsHistory(file_history_id=file_id, row_number=row_number,
-#                                      mapped_data=mapped_data)
-#     history_rec = CRUD().add(history_rec)
-#     return history_rec
-
-
 def update_last_run(file_config_id, db=CRUD().db_conn()):
     config = db.query(ProcessConfig).filter(ProcessConfig.id == file_config_id)
     if not config.first():
