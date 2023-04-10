@@ -24,9 +24,16 @@ class ExceptionMiddleWare(BaseHTTPMiddleware):
             formatted_process_time = '{0:.2f}'.format(process_time)
             print("Response:")
             try:
-                message = e.args[0]
                 status = e.args[1]
-                logger.error(f"{wrap}response: {400} in {formatted_process_time}ms{wrap}, message: {message['en']} ")
+                if e.args[2]:
+                    message = {e.args[2]: e.args[0][e.args[2]]}
+                    logger.error(
+                        f"{wrap}response: {400} in {formatted_process_time}ms{wrap}, message: {message}, field: {e.args[2]} ")
+
+                else:
+                    message = e.args[0]
+
+                    logger.error(f"{wrap}response: {400} in {formatted_process_time}ms{wrap}, message: {message['en']}")
                 return http_response(status=status, message=message)
             except:
                 logger.error(f"{wrap}response: {500} in {formatted_process_time}ms{wrap}, message: {e} ")

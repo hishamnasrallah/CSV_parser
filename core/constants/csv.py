@@ -62,3 +62,8 @@ class CSVConstants:
         "en": "Cant change status profile is inactive",
         "ar":  "لا يمكن تغيير الحالة الملف التعريفي غير مفعل"
     }
+
+    SET_ACTIVE_DATE_SOULD_BE_IN_FUTURE = {
+        "en": "Set active datetime must be in future",
+        "ar":  "وقت التفعيل يجب ان يكون في المستقبل"
+    }

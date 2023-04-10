@@ -1,10 +1,18 @@
 from typing import List, Optional
 import datetime
+
+import pydash
+from fastapi import HTTPException
 from pydantic import Field, validator
+
+from app.api.repositories.common import CRUD
 from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
+from core.exceptions.csv import SetActiveDateMustBeInFuture
+from core.exceptions.profile import ProfileDoesNotExistBadRequest, ProfileDeletedError, ProfileIsInactive, \
+    ProfileIsMandatory
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
-from app.api.models import Frequency
+from app.api.models import Frequency, Profile
 
 
 class FileTaskConfig(BaseModel):
@@ -39,13 +47,30 @@ class FileTaskConfigRequest(BaseModel):
     @validator('set_active_at', always=True)
     def check_future_datetime(cls, v, values):
         if v is not None and v <= datetime.datetime.now():
-            raise ValueError('Set active datetime must be in the future')
+            field_name = pydash.camel_case('set_active_at')
+            raise SetActiveDateMustBeInFuture(field_name=field_name)
+
         return v
+
     @validator('profile_id', always=True)
     def check_profile_id(cls, v, values):
-        if values.get('is_active') and not v:
-            raise ValueError('Profile id is mandatory when isActive is True')
+        field_name = pydash.camel_case('profile_id')
+
+        # Add validation to check if the profile is deleted or inactive
+        if v:
+            db = CRUD().db_conn()
+            profile = db.query(Profile).filter(Profile.id == v).first()
+            if not profile:
+                raise ProfileDoesNotExistBadRequest(field_name=field_name)
+            if profile.is_deleted:
+                raise ProfileDeletedError(field_name=field_name)
+            if not profile.is_active:
+                raise ProfileIsInactive(field_name=field_name)
+        else:
+            if values.get('is_active') or values.get('set_active_at'):
+                raise ProfileIsMandatory(field_name=field_name)
         return v
+
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]

@@ -17,9 +17,46 @@ class ProfileDoesNotExist(Exception):
         super().__init__(self.message_key, self.status)
 
 
-class ProfileIsInactive(Exception):
-    def __init__(self, message_key=ProfileConstants.PROFILE_IS_INACTIVE_ERROR):
-        self.message_key = message_key
-        self.status = 404
+class ProfileDoesNotExistBadRequest(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_DOES_NOT_EXIST_ERROR, field_name=None):
+        if field_name:
+            self.message_key = {field_name: message_key}
+        else:
+            self.message_key = message_key
+        self.status = 400
+        super().__init__(self.message_key, self.status, field_name)
 
-        super().__init__(self.message_key, self.status)
+
+class ProfileDeletedError(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_ALREADY_DELETED_ERROR, field_name=None):
+        if field_name:
+            self.message_key = {field_name: message_key}
+        else:
+            self.message_key = message_key
+        self.status = 400
+
+        super().__init__(self.message_key, self.status, field_name)
+
+
+class ProfileIsInactive(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_IS_INACTIVE_ERROR, field_name=None):
+
+        if field_name:
+            self.message_key = {field_name: message_key}
+        else:
+            self.message_key = message_key
+        self.status = 400
+
+        super().__init__(self.message_key, self.status, field_name)
+
+
+class ProfileIsMandatory(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_IS_MANDATORY_ERROR, field_name=None):
+
+        if field_name:
+            self.message_key = {field_name: message_key}
+        else:
+            self.message_key = message_key
+        self.status = 400
+
+        super().__init__(self.message_key, self.status, field_name)

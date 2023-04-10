@@ -10,3 +10,13 @@ class ProfileConstants:
         "en": "Profile is inactive",
         "ar":  "الملف التعريفي غير مفعل"
     }
+
+    PROFILE_ALREADY_DELETED_ERROR = {
+        "en": "Profile has been deleted",
+        "ar":  "الملف التعريفي محذوف"
+    }
+
+    PROFILE_IS_MANDATORY_ERROR = {
+        "en": "Please choose an active Parser profile",
+        "ar":  "الرجاء اختيار ملف تعريفي"
+    }
