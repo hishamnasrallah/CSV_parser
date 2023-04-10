@@ -7,7 +7,9 @@ from pydantic import Field, validator
 
 from app.api.repositories.common import CRUD
 from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
-from core.exceptions.profile import ProfileDoesNotExistBadRequest, ProfileDeletedError, ProfileIsInactive
+from core.exceptions.csv import SetActiveDateMustBeInFuture
+from core.exceptions.profile import ProfileDoesNotExistBadRequest, ProfileDeletedError, ProfileIsInactive, \
+    ProfileIsMandatory
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
 from app.api.models import Frequency, Profile
@@ -55,14 +57,14 @@ class FileTaskConfigRequest(BaseModel):
     @validator('set_active_at', always=True)
     def check_future_datetime(cls, v, values):
         if v is not None and v <= datetime.datetime.now():
-            raise ValueError('Set active datetime must be in the future')
+            field_name = pydash.camel_case('set_active_at')
+            raise SetActiveDateMustBeInFuture(field_name=field_name)
+
         return v
 
     @validator('profile_id', always=True)
     def check_profile_id(cls, v, values):
         field_name = pydash.camel_case('profile_id')
-        if values.get('is_active') and not v:
-            raise ValueError('Profile id is mandatory when isActive is True')
 
         # Add validation to check if the profile is deleted or inactive
         if v:
@@ -74,6 +76,9 @@ class FileTaskConfigRequest(BaseModel):
                 raise ProfileDeletedError(field_name=field_name)
             if not profile.is_active:
                 raise ProfileIsInactive(field_name=field_name)
+        else:
+            if values.get('is_active') or values.get('set_active_at'):
+                raise ProfileIsMandatory(field_name=field_name)
         return v
 
 

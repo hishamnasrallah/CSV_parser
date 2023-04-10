@@ -42,9 +42,21 @@ class ProfileIsInactive(Exception):
     def __init__(self, message_key=ProfileConstants.PROFILE_IS_INACTIVE_ERROR, field_name=None):
 
         if field_name:
-            self.message_key = {field_name: field_name}
+            self.message_key = {field_name: message_key}
         else:
             self.message_key = message_key
         self.status = 400
 
-        super().__init__(self.message_key, self.status)
+        super().__init__(self.message_key, self.status, field_name)
+
+
+class ProfileIsMandatory(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_IS_MANDATORY_ERROR, field_name=None):
+
+        if field_name:
+            self.message_key = {field_name: message_key}
+        else:
+            self.message_key = message_key
+        self.status = 400
+
+        super().__init__(self.message_key, self.status, field_name)

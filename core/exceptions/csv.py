@@ -85,3 +85,13 @@ class CantChangeStatusProfileIsInactive(Exception):
 
         super().__init__(self.message_key, self.status)
 
+
+class SetActiveDateMustBeInFuture(Exception):
+    def __init__(self, message_key=CSVConstants.SET_ACTIVE_DATE_SOULD_BE_IN_FUTURE, field_name=None):
+        if field_name:
+            self.message_key = {field_name: message_key}
+        else:
+            self.message_key = message_key
+        self.status = 400
+        super().__init__(self.message_key, self.status, field_name)
+
