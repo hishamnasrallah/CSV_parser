@@ -17,9 +17,25 @@ class ProfileDoesNotExist(Exception):
         super().__init__(self.message_key, self.status)
 
 
+class ProfileDoesNotExistBadRequest(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_DOES_NOT_EXIST_ERROR):
+        self.message_key = message_key
+        self.status = 400
+
+        super().__init__(self.message_key, self.status)
+
+
+class ProfileDeletedError(Exception):
+    def __init__(self, message_key=ProfileConstants.PROFILE_ALREADY_DELETED_ERROR):
+        self.message_key = message_key
+        self.status = 400
+
+        super().__init__(self.message_key, self.status)
+
+
 class ProfileIsInactive(Exception):
     def __init__(self, message_key=ProfileConstants.PROFILE_IS_INACTIVE_ERROR):
         self.message_key = message_key
-        self.status = 404
+        self.status = 400
 
         super().__init__(self.message_key, self.status)

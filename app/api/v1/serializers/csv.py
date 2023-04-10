@@ -1,10 +1,15 @@
 from typing import List, Optional
 import datetime
+
+from fastapi import HTTPException
 from pydantic import Field, validator
+
+from app.api.repositories.common import CRUD
 from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
+from core.exceptions.profile import ProfileDoesNotExistBadRequest, ProfileDeletedError, ProfileIsInactive
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
-from app.api.models import Frequency
+from app.api.models import Frequency, Profile
 
 
 class FileTaskConfig(BaseModel):
@@ -51,11 +56,24 @@ class FileTaskConfigRequest(BaseModel):
         if v is not None and v <= datetime.datetime.now():
             raise ValueError('Set active datetime must be in the future')
         return v
+
     @validator('profile_id', always=True)
     def check_profile_id(cls, v, values):
         if values.get('is_active') and not v:
             raise ValueError('Profile id is mandatory when isActive is True')
+
+        # Add validation to check if the profile is deleted or inactive
+        if v:
+            db = CRUD().db_conn()
+            profile = db.query(Profile).filter(Profile.id == v).first()
+            if not profile:
+                raise ProfileDoesNotExistBadRequest
+            if profile.is_deleted:
+                raise ProfileDeletedError
+            if not profile.is_active:
+                raise ProfileIsInactive
         return v
+
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]
