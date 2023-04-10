@@ -103,7 +103,10 @@ def http_error_response(error_message, status, language="en",
                         request_id: str = None):
     if 400 <= status <= 499:
         try:
-            error_message = error_message[language]
+            try:
+                error_message = {next(iter(error_message)): error_message[next(iter(error_message))][language]}
+            except:
+                error_message = error_message[language]
         except (KeyError, TypeError):
             if not isinstance(error_message, str):
                 error_message = "undefined message"

@@ -1,6 +1,7 @@
 from typing import List, Optional
 import datetime
 
+import pydash
 from fastapi import HTTPException
 from pydantic import Field, validator
 
@@ -59,6 +60,7 @@ class FileTaskConfigRequest(BaseModel):
 
     @validator('profile_id', always=True)
     def check_profile_id(cls, v, values):
+        field_name = pydash.camel_case('profile_id')
         if values.get('is_active') and not v:
             raise ValueError('Profile id is mandatory when isActive is True')
 
@@ -67,11 +69,11 @@ class FileTaskConfigRequest(BaseModel):
             db = CRUD().db_conn()
             profile = db.query(Profile).filter(Profile.id == v).first()
             if not profile:
-                raise ProfileDoesNotExistBadRequest
+                raise ProfileDoesNotExistBadRequest(field_name=field_name)
             if profile.is_deleted:
-                raise ProfileDeletedError
+                raise ProfileDeletedError(field_name=field_name)
             if not profile.is_active:
-                raise ProfileIsInactive
+                raise ProfileIsInactive(field_name=field_name)
         return v
 
 
