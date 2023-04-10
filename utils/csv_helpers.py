@@ -130,7 +130,7 @@ class CSVHelper:
                                 value = each_line[index]
                                 if value.startswith('="') and value.endswith('"'):
                                     value = value[2:-1]
-                                each_record[column_name["column_name"]] = value
+                                each_record[column_name["mapper_field_name"]] = value
                     mapped_data.append(each_record)
             return mapped_data
         elif file_name.endswith('.man'):
@@ -144,7 +144,7 @@ class CSVHelper:
                     each_record = dict()
                     line_values = line.strip().split('\t')
                     for i, index in enumerate(column_indices):
-                        column_name = headers[i]["column_name"]
+                        column_name = headers[i]["mapper_field_name"]
                         if index < len(line_values):
                             value = line_values[index]
                             if value.startswith('="') and value.endswith('"'):
