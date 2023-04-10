@@ -1,11 +1,14 @@
 import os
 import requests
-from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile, Status
+from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile, Status, \
+    FileReceiveHistory
 from app.api.repositories.common import CRUD
 from app.api.repositories.csv import update_file_history_rows_number_based_on_status
 from celery_config.celery_utils import create_celery
 from utils.time_difference import time_difference_in_minutes
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from fastapi.encoders import jsonable_encoder
 
 celery = create_celery()
 celery.conf.beat_schedule = {
@@ -32,6 +35,15 @@ def check_csv_files():
         last_run = task.last_run
         file_id = task.id
         process_id = task.process_id
+
+        history = db.query(FileReceiveHistory).filter(
+            FileReceiveHistory.file_id == file_id,
+            or_(FileReceiveHistory.history_status == Status.pending,
+                FileReceiveHistory.history_status == Status.in_progress)
+        ).first()
+        if history:
+            return f"THERE IS FILE STILL RUNNING {jsonable_encoder(history)}"
+
         add_tasks.delay(file_id=file_id, file_path=file_path, file_name=file_name, frequency=frequency,
                         process_id=process_id,
                         company_id=company_id, last_run=last_run)
