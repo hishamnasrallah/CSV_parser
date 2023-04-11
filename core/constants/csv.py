@@ -67,3 +67,8 @@ class CSVConstants:
         "en": "Set active datetime must be in future",
         "ar":  "وقت التفعيل يجب ان يكون في المستقبل"
     }
+
+    HISTORY_DOESNT_EXISTS = {
+        "en": "History doesnt exists",
+        "ar":  "لا يوجد سجل للتأريخ"
+    }
