@@ -148,13 +148,18 @@ def create_file_history(file_id, file_size, file_name_as_received, total_rows, t
 
 
 def update_file_history_rows_number_based_on_status(id, status, db):
-    history = db.query(FileReceiveHistory).filter(FileReceiveHistory.id == id).first()
+
+    history = db.query(FileReceiveHistory).with_for_update().filter(FileReceiveHistory.id == id).first()
+
     if not history:
         raise "batata"
+        #// TODO: handle exception
     if status == Status.success:
         history.total_success += 1
     else:
         history.total_failure += 1
+    if history.total_rows == history.total_success + history.total_failure:
+        history.history_status = Status.success
     db.commit()
 
 
