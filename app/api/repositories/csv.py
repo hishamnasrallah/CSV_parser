@@ -10,7 +10,7 @@ from app.api.repositories.common import CRUD
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
     CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, ProfileAlreadyDeleted, \
-    CantChangeStatusProfileIsInactive
+    CantChangeStatusProfileIsInactive, HistoryDoesNotExist
 
 from utils.delete_specific_task import cancel_task
 
@@ -152,8 +152,7 @@ def update_file_history_rows_number_based_on_status(id, status, db):
     history = db.query(FileReceiveHistory).with_for_update().filter(FileReceiveHistory.id == id).first()
 
     if not history:
-        raise "batata"
-        #// TODO: handle exception
+        raise HistoryDoesNotExist
     if status == Status.success:
         history.total_success += 1
     else:

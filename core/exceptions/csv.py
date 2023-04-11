@@ -95,3 +95,12 @@ class SetActiveDateMustBeInFuture(Exception):
         self.status = 400
         super().__init__(self.message_key, self.status, field_name)
 
+
+
+class HistoryDoesNotExist(Exception):
+
+    def __init__(self, message_key=CSVConstants.HISTORY_DOESNT_EXISTS):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)
