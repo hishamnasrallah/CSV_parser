@@ -2,14 +2,12 @@ from typing import List, Optional
 import datetime
 
 import pydash
-from fastapi import HTTPException
-from pydantic import Field, validator
+from pydantic import validator
 
 from app.api.repositories.common import CRUD
-from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
 from core.exceptions.csv import SetActiveDateMustBeInFuture
-from core.exceptions.profile import ProfileDoesNotExistBadRequest, ProfileDeletedError, ProfileIsInactive, \
-    ProfileIsMandatory
+from core.exceptions.profile import ProfileDoesNotExistBadRequest, \
+    ProfileDeletedError, ProfileIsInactive, ProfileIsMandatory
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
 from app.api.models import Frequency, Profile
@@ -24,8 +22,10 @@ class FileTaskConfig(BaseModel):
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
 
+
 class FileTaskResponse(BaseResponse):
     data: List[FileTaskConfig]
+
 
 class FieldMapper(BaseModel):
     field_name: str

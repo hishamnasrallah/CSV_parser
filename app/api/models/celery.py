@@ -1,10 +1,10 @@
+import enum
 import datetime
 
 from app.api.models.common import BaseModelMixin
 from core.database.settings.base import Base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, BigInteger
+from sqlalchemy import Column, Integer, String, Enum
 from json import dumps
-import enum
 
 
 class CeleryTaskStatus(int, enum.Enum):

@@ -1,4 +1,3 @@
-
 from fastapi import APIRouter, Depends, status, Request, Query
 
 from app.api.v1.dependancies.authorization import validate_authorization
@@ -25,7 +24,9 @@ def create_new_profile(request: Request, request_body: MapperProfile,
 
 
 @router.get("/profile/{profile_id}/", response_model=MapperProfileResponse)
-def get_profile_by_id(request: Request, profile_id: int, db: Session = Depends(CRUD().db_conn), token=Depends(validate_authorization)):
+def get_profile_by_id(request: Request, profile_id: int,
+                      db: Session = Depends(CRUD().db_conn),
+                      token=Depends(validate_authorization)):
     company_id = token["company"]["id"]
     data = profile.get_profile(profile_id, company_id, db)
     return http_response(data=data, status=status.HTTP_200_OK,
@@ -33,8 +34,9 @@ def get_profile_by_id(request: Request, profile_id: int, db: Session = Depends(C
 
 
 @router.get("/profiles/", response_model=MapperProfileResponse)
-def get_profiles_by_company(request: Request, is_active: bool = Query(None), name: str = Query(None),
-                            all:bool = Query(None), token=Depends(validate_authorization),
+def get_profiles_by_company(request: Request, is_active: bool = Query(None),
+                            name: str = Query(None), all:bool = Query(None),
+                            token=Depends(validate_authorization),
                             db: Session = Depends(CRUD().db_conn)):
     company_id = token["company"]["id"]
     data = profile.get_profiles_filter(company_id, db, name, is_active)
@@ -51,11 +53,11 @@ def update_profile_by_id(profile_id: int, request_body: MapperProfile,
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.UPDATED_MSG)
 
+
 @router.delete("/profile/{profile_id}/")
 def delete_profile_by_id(profile_id: int, db: Session = Depends(CRUD().db_conn),
                          token=Depends(validate_authorization)):
     company_id = token["company"]["id"]
-
     data = profile.delete_profile(profile_id, company_id, db)
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.DELETED_MSG)
@@ -63,10 +65,9 @@ def delete_profile_by_id(profile_id: int, db: Session = Depends(CRUD().db_conn),
 
 @router.put("/profile/{id}/change-status/", response_model=MapperProfile)
 def change_profile_status(request: Request, id:int,
-                            token=Depends(validate_authorization),
-                            db: Session = Depends(CRUD().db_conn)):
+                          token=Depends(validate_authorization),
+                          db: Session = Depends(CRUD().db_conn)):
     company_id = token["company"]["id"]
-
     data = profile.change_profile_status(id, company_id, db)
     return http_response(data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.UPDATED_MSG)

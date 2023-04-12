@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from urllib.error import URLError
 
 from requests import request as _request
@@ -105,7 +103,8 @@ class Broker:
 
         return "/".join(map(str, sections))
 
-    def send(self, method, url, response_message_key, headers=None, params=None, data=None,
+    def send(self, method, url, response_message_key, headers=None, params=None,
+             data=None,
              timeout=RequestConstants.REQUEST_TIMEOUT,
              accept=RequestConstants.CONTENT_TYPE):
         """
@@ -167,7 +166,8 @@ class Broker:
         if self.is_auth_error(status_code):
             raise InvalidAuthentication
 
-        return http_response(data=response.content, message_key=response_message_key,
+        return http_response(data=response.content,
+                             message_key=response_message_key,
                              status=status_code)
 
     def make_url(self, *args):

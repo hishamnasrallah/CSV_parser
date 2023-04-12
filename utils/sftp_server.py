@@ -1,6 +1,7 @@
 import paramiko
 import os
 
+
 class SFTPHelper:
 
     def __init__(self):
@@ -18,18 +19,12 @@ class SFTPHelper:
     def copy_file_from_server(self, file_name):
         current_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         os.makedirs(f'{current_dir}/tmp', exist_ok=True)
-
-
         self.sftp.get(f"{file_name}", f"{current_dir}/tmp/{file_name}")
-
-
 
     def read_files_by_prefix_sftp(self, prefix):
         files = []
         for filename in self.sftp.listdir():
             if prefix in filename:
-            # if filename.startswith(prefix):
-            #// TODO: remove comment line if this accepted by abdallah
                 with self.sftp.open(filename) as f:
                     file_name = filename
                     files.append(file_name)

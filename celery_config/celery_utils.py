@@ -11,6 +11,3 @@ def create_celery():
     celery_app.conf.accept_content = ['json']
 
     return celery_app
-
-
-

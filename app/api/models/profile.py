@@ -1,9 +1,6 @@
-import datetime
 from app.api.models.common import BaseModelMixin
 from core.database.settings.base import Base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, BigInteger
-import enum
-from json import dumps
+from sqlalchemy import Column, Integer, String, Boolean
 
 
 class Profile(BaseModelMixin, Base):

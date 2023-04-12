@@ -40,12 +40,10 @@ class CSVConstants:
         "ar": "فشل في التعديل"
     }
 
-
     CANT_CHANGE_STATUS_NO_ASSIGNED_PROFILE = {
         "en": "Cant change status, there is no any assigned profile",
         "ar": "لا يمكن تغيير الحالة لا يوجد اي ملف تعريفي مرتبط"
     }
-
 
     NO_ASSIGNED_PROFILE = {
         "en": "There is no any assigned profile",
@@ -56,7 +54,6 @@ class CSVConstants:
         "en": "Cant change status profile had been deleted",
         "ar":  "لا يمكن تغيير الحالة الملف التعريفي محذوف مسبقا"
     }
-
 
     PROFILE_IS_INACTIVE_ERROR = {
         "en": "Cant change status profile is inactive",

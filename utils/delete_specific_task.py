@@ -14,6 +14,5 @@ def cancel_task(tasks: list):
             backend = celery.backend
             backend.forget(task_id)
             backend.delete(task_id)
-            logger.info(f"Task {task_id} has been deleted from the result backend.")
-
-
+            logger.info(f"Task {task_id} has been deleted "
+                        f"from the result backend.")

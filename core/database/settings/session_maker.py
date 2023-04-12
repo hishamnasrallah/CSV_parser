@@ -1,9 +1,9 @@
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine
-# from core.utils.env import URL_MASTER, URL_SLAVE, URL_TEST
 
-# from app.database.migrations.env import DATABASE_URL
 from core.settings.base import settings
+
+
 READ_WRITE = 'read_write'
 READ = 'read'
 TEST_DB = 'test'
@@ -18,7 +18,8 @@ class _DBPool:
         return
 
 
-# global handle for the DB session, it is a callable object, once called, it will create a new background session.
+# global handle for the DB session, it is a callable object,
+# once called, it will create a new background session.
 pools = {READ: _DBPool(READ, settings.db_url),
          READ_WRITE: _DBPool(READ_WRITE, settings.db_url),
          TEST_DB: _DBPool(TEST_DB, settings.db_url)}

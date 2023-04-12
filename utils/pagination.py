@@ -16,8 +16,6 @@ def paginator(request: Request, data, page_num: int = 1, page_size: int = 10):
     except:
         page_size = page_size
 
-
-
     start = (page_num - 1) * page_size
     end = start + page_size
     data_length = len(data)
@@ -28,7 +26,6 @@ def paginator(request: Request, data, page_num: int = 1, page_size: int = 10):
         "next": None,
         "previous": None
                 }
-
 
     if end >= data_length:
         response["next"] = None

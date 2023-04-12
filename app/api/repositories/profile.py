@@ -16,7 +16,8 @@ def create_profile(request_body, token, db):
 
 
 def get_profile(profile_id: int, company_id, db):
-    profile = db.query(Profile).filter(Profile.id == profile_id, Profile.company_id == company_id,
+    profile = db.query(Profile).filter(Profile.id == profile_id,
+                                       Profile.company_id == company_id,
                                        Profile.is_deleted == False).first()
     if not profile:
         raise ProfileDoesNotExist
@@ -42,7 +43,8 @@ def get_profiles_filter(company_id, db, name_contains=None, is_active=None):
 
 
 def update_profile(profile_id: int, company_id, request_body, db):
-    profile = db.query(Profile).filter(Profile.id == profile_id, Profile.is_deleted == False,
+    profile = db.query(Profile).filter(Profile.id == profile_id,
+                                       Profile.is_deleted == False,
                                        Profile.company_id == company_id).first()
     if not profile:
         raise ProfileDoesNotExist
@@ -56,22 +58,27 @@ def update_profile(profile_id: int, company_id, request_body, db):
 
 
 def delete_profile(profile_id: int, company_id, db):
-    profile = db.query(Profile).filter(Profile.id == profile_id, Profile.company_id == company_id,
+    profile = db.query(Profile).filter(Profile.id == profile_id,
+                                       Profile.company_id == company_id,
                                        Profile.is_deleted == False).first()
     if not profile:
         raise ProfileDoesNotExist
     profile.is_deleted = True
-    db.query(MapperProfile).filter(MapperProfile.profile_id == profile_id).delete()
+    db.query(MapperProfile).filter(
+        MapperProfile.profile_id == profile_id).delete()
     db.commit()
     return {"detail": "Profile deleted successfully"}
 
 
 def change_profile_status(id, company_id, db):
-    profile = db.query(Profile).filter(Profile.id == id, Profile.company_id == company_id, Profile.is_deleted == False)
+    profile = db.query(Profile).filter(Profile.id == id,
+                                       Profile.company_id == company_id,
+                                       Profile.is_deleted == False)
     if not profile.first():
         raise ProfileDoesNotExist
     profile_obj = profile.first()
-    # // TODO: check if i have to deactivate all old mapper when deactivate here and if i should activate old mappers if i activate here
+    # TODO: check if i have to deactivate all old mapper when deactivate
+    #  here and if i should activate old mappers if i activate here
     if profile_obj.is_active:
         profile_obj.is_active = False
     elif not profile_obj.is_active:

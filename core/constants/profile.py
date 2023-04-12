@@ -5,7 +5,6 @@ class ProfileConstants:
         "ar":  "الحساب التعريفي غير موجودة"
     }
 
-
     PROFILE_IS_INACTIVE_ERROR = {
         "en": "Profile is inactive",
         "ar":  "الملف التعريفي غير مفعل"
