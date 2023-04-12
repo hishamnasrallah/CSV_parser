@@ -162,7 +162,8 @@ def update_file_history_rows_number_based_on_status(id, status, db):
         history_details.total_failure += 1
     if history_details.total_rows == history_details.total_success:
         history.history_status = Status.success
-    elif history_details.total_rows == history_details.total_success + history_details.total_failure:
+    elif history_details.total_rows != history_details.total_success and \
+            history_details.total_rows == history_details.total_success + history_details.total_failure:
         history.history_status = Status.failed
     else:
         history.history_status = Status.in_progress
@@ -178,7 +179,7 @@ def create_failed_row(history_id, file_id, row_number, row_data, task_id):
     return row_history_rec
 
 
-def update_failed_row(history_id, row_history_id, status, task_id, db):
+def update_failed_row(history_id, row_history_id, status, task_id, is_retry, db):
     history = db.query(FileHistory).with_for_update().filter(FileHistory.id == history_id).first()
     history_details = db.query(FileReceiveHistoryDetail).filter(FileReceiveHistoryDetail.id == history_id).first()
     row_history = db.query(FileHistoryFailedRows).filter(
@@ -189,11 +190,15 @@ def update_failed_row(history_id, row_history_id, status, task_id, db):
         db.commit()
     elif status == Status.success:
         history_details.total_success += 1
-        history_details.total_failure -= 1
+        if is_retry:
+            history_details.total_failure -= 1
         if history_details.total_rows == history_details.total_success:
             history.history_status = Status.success
-        if history_details.total_rows == history_details.total_success + history_details.total_failure:
+        elif history_details.total_rows == history_details.total_success + history_details.total_failure and\
+                history_details.total_rows != history_details.total_success :
             history.history_status = Status.failed
+        else:
+            history.history_status = Status.in_progress
         db.query(FileHistoryFailedRows).filter(
             FileHistoryFailedRows.id == row_history_id).delete()
         db.commit()

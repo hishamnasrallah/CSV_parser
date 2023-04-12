@@ -182,7 +182,8 @@ def send_collected_data(company_id, process_id, row_number, history_id, data, fi
         if response.status_code == 201:
             status = Status.success
             update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
-                              db=db)
+                              is_retry=is_retry, db=db)
+
         else:
             status = Status.failed
             if not is_retry:
@@ -194,7 +195,7 @@ def send_collected_data(company_id, process_id, row_number, history_id, data, fi
                     update_file_history_rows_number_based_on_status(history_id, status, db)
             else:
                 update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
-                                  db=db)
+                                  is_retry=is_retry, db=db)
 
     except:
         status = Status.failed
@@ -205,7 +206,7 @@ def send_collected_data(company_id, process_id, row_number, history_id, data, fi
             update_file_history_rows_number_based_on_status(history_id, status, db)
         else:
             update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
-                              db=db)
+                              is_retry=is_retry, db=db)
         response = "connection error"
     return {"core_response": str(response)}
 
