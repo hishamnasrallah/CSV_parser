@@ -23,7 +23,7 @@ class Frequency(int, enum.Enum):
     hour_24 = 1440
 
 
-class ProcessConfig(BaseModelMixin, Base):
+class Parser(BaseModelMixin, Base):
     file_name = Column(String(length=255))
     file_path = Column(String(length=255), nullable=True)
     frequency = Column(Enum(Frequency), default=None)
@@ -63,13 +63,26 @@ class Status(int, enum.Enum):
     failed = 4
 
 
-class FileReceiveHistory(BaseModelMixin, Base):
+class FileHistory(BaseModelMixin, Base):
     file_id = Column(Integer, index=True)
     file_size_kb = Column(BigInteger, nullable=True)
     file_name_as_received = Column(String(length=255), nullable=True)
     task_id = Column(String(length=255), nullable=True)
+    history_status = Column(Enum(Status), default=Status.pending)
+
+
+class FileReceiveHistoryDetail(BaseModelMixin, Base):
+    history_id = Column(Integer, index=True, nullable=False)
+    file_id = Column(Integer, index=True, nullable=False)
     total_rows = Column(Integer)
     total_success = Column(Integer)
     total_failure = Column(Integer)
-    history_status = Column(Enum(Status), default=Status.pending)
 
+
+class FileHistoryFailedRows(BaseModelMixin, Base):
+    history_id = Column(Integer, index=True, nullable=False)
+    file_id = Column(Integer, index=True, nullable=False)
+    row_number = Column(Integer, nullable=False)
+    number_of_reties = Column(Integer, nullable=False)
+    row_data = Column(JSON, nullable=False)
+    task_id = Column(String(length=255), nullable=True)
