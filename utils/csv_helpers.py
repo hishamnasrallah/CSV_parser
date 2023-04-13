@@ -131,7 +131,7 @@ class CSVHelper:
                                 if value.startswith('="') and value.endswith('"'):
                                     value = value[2:-1]
                                 each_record[column_name["mapper_field_name"]] = value
-                            mapped_data.append(each_record)
+                    mapped_data.append(each_record)
         elif file_name.endswith('.man'):
             with open(f"{self.current_dir}/tmp/{file_name}", "r") as file:
                 file_content = file.readlines()
