@@ -73,9 +73,16 @@ def mappers_history(token, file_id, db):
     :param db: is the database connection
     :return: all history records for specific file
     """
-    configs = db.query(FileHistory).filter(FileHistory.file_id == file_id).all()
-    jsonable_encoder(configs)
-    return jsonable_encoder(configs)
+    result = []
+    file_histories = db.query(FileHistory).filter(FileHistory.file_id == file_id).all()
+    for file_history in file_histories:
+        file_history_detail = db.query(FileReceiveHistoryDetail).filter(FileReceiveHistoryDetail.history_id == file_history.id).first()
+        file_history_dict = jsonable_encoder(file_history)
+        file_history_dict["total_rows"] = file_history_detail.total_rows
+        file_history_dict["total_success"] = file_history_detail.total_success
+        file_history_dict["total_failure"] = file_history_detail.total_failure
+        result.append(file_history_dict)
+    return jsonable_encoder(result)
 
 
 def delete_config(id, token, db):
