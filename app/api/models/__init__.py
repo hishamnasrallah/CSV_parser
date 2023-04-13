@@ -9,7 +9,7 @@ and no need to modify env.py in alembic folder
 __all__ = ("Parser",
            "ProcessMapField",
            "FileHistory",
-           # "MapperTask",
+           "MapperTask",
            "Profile",
            "Status")
 del globals()["BaseModelMixin"]

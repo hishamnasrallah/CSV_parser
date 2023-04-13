@@ -1,6 +1,4 @@
 import os
-from time import sleep
-
 import requests
 from app.api.models import Parser, MapperTask, CeleryTaskStatus, Profile, MapperProfile, Status, \
     FileHistory, FileHistoryFailedRows
@@ -13,14 +11,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from fastapi.encoders import jsonable_encoder
 from celery.result import AsyncResult
-# from contextlib import contextmanager
-# from redis import Redis
-# import time
 
-
-# LOCK_EXPIRE = 60 # Lock expires in 10 minutes
-#
-# redis_client = Redis(host='localhost', port=6379, db=0)
 
 
 celery = create_celery()
