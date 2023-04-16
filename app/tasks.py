@@ -16,14 +16,14 @@ from celery.result import AsyncResult
 
 celery = create_celery()
 celery.conf.beat_schedule = {
-    'check-csv-files-every-120-seconds': {
-        'task': 'app.tasks.check_csv_files',
-        'schedule': 60.0,
-    #     # // TODO: after fixing the seessions issue it should be returned to be 900.0 nested of 15.0
-    },
+    # 'check-csv-files-every-120-seconds': {
+    #     'task': 'app.tasks.check_csv_files',
+    #     'schedule': 60.0,
+    # #     # // TODO: after fixing the seessions issue it should be returned to be 900.0 nested of 15.0
+    # },
     'retry-every-120-seconds': {
         'task': 'app.tasks.retry_failures',
-        'schedule': 300.0,
+        'schedule': 30.0,
     },
 }
 
@@ -145,7 +145,8 @@ def retry_failures():
             Parser.id == original_file_history.file_id).first()
         if failed_row.task_id is not None:
             task = AsyncResult(failed_row.task_id, app=celery)
-            if task.state in ['FAILURE', 'SUCCESS']:
+
+            if task.state not in ['PENDING', "STARTED", "RETRY"] or not task.ready():
                     send_collected_data.delay(parser.company_id, parser.process_id,
                                               failed_row.row_number, failed_row.history_id, failed_row.row_data,
                                               failed_row.file_id, True, failed_row.id)
@@ -166,31 +167,37 @@ def send_collected_data(company_id, process_id, row_number, history_id, data, fi
         "Host": "parser:8000"
     }
     url = f"{host}/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+    db = CRUD().db_conn()
+
     try:
-        response = requests.request("POST", url, headers=headers, data=data)
-        db = CRUD().db_conn()
 
-        if response.status_code == 201:
-            status = Status.success
-            update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
-                              is_retry=is_retry, db=db)
-
+        row_history = db.query(FileHistoryFailedRows).filter(FileHistoryFailedRows.id == row_history_id)
+        if not row_history.first() and is_retry:
+            return {"core_response": "Nothing to send"}
         else:
-            status = Status.failed
-            if not is_retry:
-                row_history = db.query(FileHistoryFailedRows).filter(
-                    FileHistoryFailedRows.id == row_history_id).first()
-                if row_history.number_of_reties <= 5:
-                    create_failed_row(history_id=history_id, file_id=file_id, row_number=row_number, row_data=data,
-                                      task_id=task_id)
-                    update_file_history_rows_number_based_on_status(history_id, status, db)
-            else:
+            response = requests.request("POST", url, headers=headers, data=data)
+            db = CRUD().db_conn()
+
+            if response.status_code == 201:
+                status = Status.success
                 update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
                                   is_retry=is_retry, db=db)
 
+            else:
+                status = Status.failed
+                if not is_retry:
+                    row_history = db.query(FileHistoryFailedRows).filter(
+                        FileHistoryFailedRows.id == row_history_id).first()
+                    if row_history.number_of_reties <= 5:
+                        create_failed_row(history_id=history_id, file_id=file_id, row_number=row_number, row_data=data,
+                                          task_id=task_id)
+                        update_file_history_rows_number_based_on_status(history_id, status, db)
+                else:
+                    update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
+                                      is_retry=is_retry, db=db)
+
     except:
         status = Status.failed
-        db = CRUD().db_conn()
         if not is_retry:
             create_failed_row(history_id=history_id, file_id=file_id, row_number=row_number, row_data=data,
                               task_id=task_id)

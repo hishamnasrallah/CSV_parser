@@ -85,4 +85,5 @@ class FileHistoryFailedRows(BaseModelMixin, Base):
     row_number = Column(Integer, nullable=False)
     number_of_reties = Column(Integer, nullable=False)
     row_data = Column(JSON, nullable=False)
+    is_success = Column(Boolean, default=False)
     task_id = Column(String(length=255), nullable=True)

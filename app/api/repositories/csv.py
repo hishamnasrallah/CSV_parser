@@ -199,6 +199,7 @@ def update_failed_row(history_id, row_history_id, status, task_id, is_retry, db)
         history_details.total_success += 1
         if is_retry:
             history_details.total_failure -= 1
+            row_history.is_success = True
         if history_details.total_rows == history_details.total_success:
             history.history_status = Status.success
         elif history_details.total_rows == history_details.total_success + history_details.total_failure and\
@@ -206,8 +207,8 @@ def update_failed_row(history_id, row_history_id, status, task_id, is_retry, db)
             history.history_status = Status.failed
         else:
             history.history_status = Status.in_progress
-        db.query(FileHistoryFailedRows).filter(
-            FileHistoryFailedRows.id == row_history_id).delete()
+        # db.query(FileHistoryFailedRows).filter(
+        #     FileHistoryFailedRows.id == row_history_id).delete()
         db.commit()
 
 
