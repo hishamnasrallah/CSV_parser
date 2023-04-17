@@ -10,7 +10,7 @@ logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
 async def log_requests(request: Request, call_next):
     wrap = "\""
-    if 'beat' not in request.url.path and '/docs' not in request.url.path and \
+    if 'health' not in request.url.path and '/docs' not in request.url.path and \
             '/openapi.json' not in request.url.path and \
             settings.env != AppEnvTypes.prod:
         logger.info(
@@ -33,7 +33,7 @@ async def log_requests(request: Request, call_next):
     async for chunk in response.body_iterator:
         response_body += chunk
 
-    if 'beat' not in request.url.path:
+    if 'health' not in request.url.path:
         logger.info(response_body)
         return Response(
             content=response_body,
