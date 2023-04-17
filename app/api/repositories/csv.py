@@ -117,7 +117,9 @@ def delete_config(parser_id, token, db):
         config_obj = config.first()
         fields_mappers = db.query(ProcessMapField).filter(
             ProcessMapField.file_id == config_obj.id)
-
+        parser_profile = db.query(MapperProfile).filter(
+            MapperProfile.mapper_id == config_obj.id)
+        parser_profile.delete(synchronize_session=False)
         fields_mappers.delete(synchronize_session=False)
         db.commit()
 
@@ -464,7 +466,18 @@ def clone_mapper(token, parser_id, db):
 
     mapper_id = mapper_config_obj.id
     file_config_rec = CRUD().add(rec)
+    mapper_profile = db.query(MapperProfile).filter(
+        MapperProfile.mapper_id == parser_id)
     cloned_mapper_id = file_config_rec.id
+    profile_id = None
+    if mapper_profile.first():
+        mapper_profile_obj = mapper_profile.first()
+        mapper_profile_rec = MapperProfile(
+            profile_id=mapper_profile_obj.profile_id,
+            mapper_id=cloned_mapper_id)
+        mapper_profile_rec = CRUD().add(mapper_profile_rec)
+        profile_id = mapper_profile_rec.profile_id
+
     mapper_fields = db.query(ProcessMapField).filter(
         ProcessMapField.file_id == mapper_id).all()
 
@@ -478,5 +491,6 @@ def clone_mapper(token, parser_id, db):
     mapper_fields = db.query(ProcessMapField).filter(
         ProcessMapField.file_id == cloned_mapper_id).all()
     cloned_mapper_config = jsonable_encoder(rec)
+    cloned_mapper_config["profile_id"] = profile_id
     cloned_mapper_config["mapper"] = jsonable_encoder(mapper_fields)
     return jsonable_encoder(cloned_mapper_config)

@@ -45,6 +45,15 @@ class FailedCreateNewFileTaskConfig(Exception):
         super().__init__(self.message_key, self.status)
 
 
+class AnotherParserHasSameProcessID(Exception):
+    def __init__(self,
+                 message_key=CSVConstants.ANOTHER_PARSER_HAS_SAME_PROCESS_ID_ERROR):
+        self.message_key = message_key
+        self.status = 401
+
+        super().__init__(self.message_key, self.status)
+
+
 class FailedToUpdateFileTaskConfig(Exception):
     def __init__(self,
                  message_key=CSVConstants.FAILED_UPDATE_FILE_TASK_CONFIG):

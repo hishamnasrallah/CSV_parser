@@ -17,19 +17,19 @@ router = APIRouter(
 
 
 @router.post("/mappers/", response_model=FileTaskConfigResponse)
-def create_new_file_process(request_body: FileTaskConfigRequest,
-                            token=Depends(validate_authorization),
-                            ):
-    data = csv.create_config(request_body, token)
+def create_new_parser(request_body: FileTaskConfigRequest,
+                      token=Depends(validate_authorization),
+                      db: Session = Depends(CRUD().db_conn)):
+    data = csv.create_config(request_body, token, db)
     return http_response(data=data, status=status.HTTP_201_CREATED,
                          message=ResponseConstants.CREATED_MSG)
 
 
 @router.post("/mappers/{parser_id}/exscute/",
              response_model=FileTaskConfigResponse)
-def create_new_file_process(parser_id: int,
-                            token=Depends(validate_authorization),
-                            db: Session = Depends(CRUD().db_conn)):
+def execute_parser(parser_id: int,
+                   token=Depends(validate_authorization),
+                   db: Session = Depends(CRUD().db_conn)):
     data = csv.execute_mapper(token, parser_id, db)
     return http_response(data=data, status=status.HTTP_201_CREATED,
                          message=ResponseConstants.CREATED_MSG)
@@ -55,9 +55,9 @@ def change_mapper_status(parser_id: int,
 
 
 @router.get("/mappers/", response_model=DashboardResponse)
-def get_mappers_configs(request: Request, name: str = Query(None),
-                        token=Depends(validate_authorization),
-                        db: Session = Depends(CRUD().db_conn)):
+def get_parsers(request: Request, name: str = Query(None),
+                token=Depends(validate_authorization),
+                db: Session = Depends(CRUD().db_conn)):
     if name:
         data = csv.mapper_config_filter(token, name, db)
     else:
@@ -67,7 +67,7 @@ def get_mappers_configs(request: Request, name: str = Query(None),
 
 
 @router.get("/mapper/{parser_id}/", response_model=MapperDetailResponse)
-def get_mapper_details(parser_id: int, token=Depends(validate_authorization),
+def get_parser_details(parser_id: int, token=Depends(validate_authorization),
                        db: Session = Depends(CRUD().db_conn)):
     data = csv.mapper_details(token, parser_id, db)
     return http_response(data=data, status=status.HTTP_200_OK,
@@ -76,9 +76,9 @@ def get_mapper_details(parser_id: int, token=Depends(validate_authorization),
 
 @router.post("/mappers/{parser_id}/clone/",
              response_model=FileTaskConfigResponse)
-def create_new_file_process(parser_id: int,
-                            token=Depends(validate_authorization),
-                            db: Session = Depends(CRUD().db_conn)):
+def clone_parser(parser_id: int,
+                 token=Depends(validate_authorization),
+                 db: Session = Depends(CRUD().db_conn)):
     data = csv.clone_mapper(token, parser_id, db)
     return http_response(data=data, status=status.HTTP_201_CREATED,
                          message=ResponseConstants.CREATED_MSG)
@@ -95,7 +95,7 @@ def mapper_filter(request: Request, name: str,
 
 
 @router.get("/mapper/{parser_id}/debug/", response_model=DebugHistoryResponse)
-def get_mapper_history(request: Request, parser_id: int,
+def get_parser_history(request: Request, parser_id: int,
                        token=Depends(validate_authorization)):
     data = csv.mappers_history(token, parser_id)
     return http_response(request=request, data=data, status=status.HTTP_200_OK,
@@ -103,7 +103,7 @@ def get_mapper_history(request: Request, parser_id: int,
 
 
 @router.delete("/mapper/{parser_id}/")
-def delete_config(parser_id: int, token=Depends(validate_authorization),
+def delete_parser(parser_id: int, token=Depends(validate_authorization),
                   db: Session = Depends(CRUD().db_conn)):
     data = csv.delete_config(parser_id, token, db)
     return http_response(data=data, status=status.HTTP_204_NO_CONTENT,

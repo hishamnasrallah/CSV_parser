@@ -26,12 +26,14 @@ class ExceptionMiddleWare(BaseHTTPMiddleware):
             print("Response:")
             try:
                 status = e.args[1]
-                if e.args[2]:
+
+                if len(e.args) == 3:
                     message = {e.args[2]: e.args[0][e.args[2]]}
                     logger.error(
                         f"{wrap}response: {400} in {formatted_process_time}ms{wrap}, message: {message}, field: {e.args[2]} ")
 
-                else:
+
+                elif len(e.args) == 2:
                     message = e.args[0]
 
                     logger.error(

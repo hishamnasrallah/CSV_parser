@@ -35,6 +35,11 @@ class CSVConstants:
         "ar": "فشل في انشاء سجل جديد"
     }
 
+    ANOTHER_PARSER_HAS_SAME_PROCESS_ID_ERROR = {
+        "en": "This Process Already has a Parser!",
+        "ar": "يوجد محلل بنفس رقم العملية"
+    }
+
     FAILED_UPDATE_FILE_TASK_CONFIG = {
         "en": "Update failed",
         "ar": "فشل في التعديل"

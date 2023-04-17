@@ -3,13 +3,14 @@ import datetime
 import pydash
 from pydantic import validator
 from app.api.repositories.common import CRUD
-from core.exceptions.csv import SetActiveDateMustBeInFuture
+from core.exceptions.csv import SetActiveDateMustBeInFuture, \
+    AnotherParserHasSameProcessID
 from core.exceptions.profile import ProfileDoesNotExistBadRequest, \
     ProfileDeletedError, ProfileIsInactive, \
     ProfileIsMandatory
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
-from app.api.models import Frequency, Profile
+from app.api.models import Frequency, Profile, Parser
 
 
 class FileTaskConfig(BaseModel):
@@ -69,6 +70,16 @@ class FileTaskConfigRequest(BaseModel):
             if values.get('is_active') or values.get('set_active_at'):
                 raise ProfileIsMandatory(field_name=field_name)
         return v
+
+    @validator('process_id', always=True)
+    def check_process_id(cls, v, values):
+        if v:
+            db = CRUD().db_conn()
+            parser_with_same_process_id = db.query(Parser).filter(
+                Parser.process_id == v)
+
+            if parser_with_same_process_id.first():
+                raise AnotherParserHasSameProcessID
 
 
 class FileTaskConfigBaseResponse(BaseModel):
