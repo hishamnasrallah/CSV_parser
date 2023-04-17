@@ -1,6 +1,4 @@
 from json import dumps
-
-# from pydantic import BaseModel as PBaseModel
 from fastapi_camelcase import CamelModel
 
 import datetime

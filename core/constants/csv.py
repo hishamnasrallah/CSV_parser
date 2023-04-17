@@ -2,12 +2,12 @@ class CSVConstants:
     # Error messages
     CONFIG_DOES_NOT_EXIST_ERROR = {
         "en": "config does not exist",
-        "ar":  "التهيئة غير موجودة"
+        "ar": "التهيئة غير موجودة"
     }
 
     CONFIG_MAPPER_FIELDS_DOES_NOT_EXIST_ERROR = {
         "en": "Mapper fields does not exist",
-        "ar":  "خريطة الحقول غير موجودة"
+        "ar": "خريطة الحقول غير موجودة"
     }
 
     INCORRECT_LOGIN_INPUT_ERROR = {
@@ -40,12 +40,10 @@ class CSVConstants:
         "ar": "فشل في التعديل"
     }
 
-
     CANT_CHANGE_STATUS_NO_ASSIGNED_PROFILE = {
         "en": "Cant change status, there is no any assigned profile",
         "ar": "لا يمكن تغيير الحالة لا يوجد اي ملف تعريفي مرتبط"
     }
-
 
     NO_ASSIGNED_PROFILE = {
         "en": "There is no any assigned profile",
@@ -54,21 +52,20 @@ class CSVConstants:
 
     PROFILE_ALREADY_DELETED_ERROR = {
         "en": "Cant change status profile had been deleted",
-        "ar":  "لا يمكن تغيير الحالة الملف التعريفي محذوف مسبقا"
+        "ar": "لا يمكن تغيير الحالة الملف التعريفي محذوف مسبقا"
     }
-
 
     PROFILE_IS_INACTIVE_ERROR = {
         "en": "Cant change status profile is inactive",
-        "ar":  "لا يمكن تغيير الحالة الملف التعريفي غير مفعل"
+        "ar": "لا يمكن تغيير الحالة الملف التعريفي غير مفعل"
     }
 
     SET_ACTIVE_DATE_SOULD_BE_IN_FUTURE = {
         "en": "Set active datetime must be in future",
-        "ar":  "وقت التفعيل يجب ان يكون في المستقبل"
+        "ar": "وقت التفعيل يجب ان يكون في المستقبل"
     }
 
     HISTORY_DOESNT_EXISTS = {
         "en": "History doesnt exists",
-        "ar":  "لا يوجد سجل للتأريخ"
+        "ar": "لا يوجد سجل للتأريخ"
     }

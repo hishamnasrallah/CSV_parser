@@ -6,11 +6,13 @@ class ProfileDoesNotExist(Exception):
     while using try except you should follow the following style
     try:
         try_dody
-    except {{specify_exception_class}} as e: # e is a variable will contain the error message of the exception
+    except {{specify_exception_class}} as e: # e is a variable will contain
+     the error message of the exception
         exception_body
     """
 
-    def __init__(self, message_key=ProfileConstants.PROFILE_DOES_NOT_EXIST_ERROR):
+    def __init__(self,
+                 message_key=ProfileConstants.PROFILE_DOES_NOT_EXIST_ERROR):
         self.message_key = message_key
         self.status = 404
 
@@ -18,7 +20,9 @@ class ProfileDoesNotExist(Exception):
 
 
 class ProfileDoesNotExistBadRequest(Exception):
-    def __init__(self, message_key=ProfileConstants.PROFILE_DOES_NOT_EXIST_ERROR, field_name=None):
+    def __init__(self,
+                 message_key=ProfileConstants.PROFILE_DOES_NOT_EXIST_ERROR,
+                 field_name=None):
         if field_name:
             self.message_key = {field_name: message_key}
         else:
@@ -28,7 +32,9 @@ class ProfileDoesNotExistBadRequest(Exception):
 
 
 class ProfileDeletedError(Exception):
-    def __init__(self, message_key=ProfileConstants.PROFILE_ALREADY_DELETED_ERROR, field_name=None):
+    def __init__(self,
+                 message_key=ProfileConstants.PROFILE_ALREADY_DELETED_ERROR,
+                 field_name=None):
         if field_name:
             self.message_key = {field_name: message_key}
         else:
@@ -39,7 +45,8 @@ class ProfileDeletedError(Exception):
 
 
 class ProfileIsInactive(Exception):
-    def __init__(self, message_key=ProfileConstants.PROFILE_IS_INACTIVE_ERROR, field_name=None):
+    def __init__(self, message_key=ProfileConstants.PROFILE_IS_INACTIVE_ERROR,
+                 field_name=None):
 
         if field_name:
             self.message_key = {field_name: message_key}
@@ -51,7 +58,8 @@ class ProfileIsInactive(Exception):
 
 
 class ProfileIsMandatory(Exception):
-    def __init__(self, message_key=ProfileConstants.PROFILE_IS_MANDATORY_ERROR, field_name=None):
+    def __init__(self, message_key=ProfileConstants.PROFILE_IS_MANDATORY_ERROR,
+                 field_name=None):
 
         if field_name:
             self.message_key = {field_name: message_key}

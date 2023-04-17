@@ -1,10 +1,6 @@
-from datetime import timedelta
-
 from urllib.error import URLError
-
 from requests import request as _request
 from requests.exceptions import RequestException, Timeout
-
 from core.exceptions.service import ServiceUnavailable, NotAcceptable
 from core.constants.request import Request as RequestConstants
 from core.exceptions.csv import InvalidAuthentication

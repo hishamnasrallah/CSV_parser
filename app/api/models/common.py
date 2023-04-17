@@ -8,7 +8,8 @@ class BaseModelMixin:
     so no need to add id, created_at, and updated_at column in the models.
     """
 
-    id = Column(Integer, autoincrement=True, primary_key=True, index=True, unique=True)
+    id = Column(Integer, autoincrement=True, primary_key=True, index=True,
+                unique=True)
     created_at = Column(DateTime, default=func.now(), nullable=False)
-    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
-
+    updated_at = Column(DateTime, default=func.now(), onupdate=func.now(),
+                        nullable=False)

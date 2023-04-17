@@ -14,7 +14,6 @@ logger.info("echoing something from the uicheckapp logger")
 app = FastAPI(title="Parser", docs_url="/parser/docs",
               openapi_url="/parser/openapi.json")
 
-
 # CORS
 origins = ["*"]
 

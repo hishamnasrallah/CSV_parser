@@ -13,5 +13,3 @@ def time_difference_in_minutes(last_run):
     diff = time_now - last_run
     diff_minutes = diff.total_seconds() / 60
     return diff_minutes
-
-
