@@ -96,8 +96,8 @@ def mapper_filter(request: Request, name: str,
 
 @router.get("/mapper/{parser_id}/debug/", response_model=DebugHistoryResponse)
 def get_parser_history(request: Request, parser_id: int,
-                       token=Depends(validate_authorization)):
-    data = csv.mappers_history(token, parser_id)
+                       db: Session = Depends(CRUD().db_conn)):
+    data = csv.mappers_history(parser_id, db)
     return http_response(request=request, data=data, status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
