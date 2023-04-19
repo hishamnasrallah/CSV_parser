@@ -1,32 +1,40 @@
 import os
 import requests
-from app.api.models import ProcessConfig, MapperTask, CeleryTaskStatus, Profile, MapperProfile, Status, \
-    FileReceiveHistory
+from app.api.models import Parser, MapperTask, CeleryTaskStatus, Profile, MapperProfile, Status, \
+    FileHistory, FileHistoryFailedRows
 from app.api.repositories.common import CRUD
-from app.api.repositories.csv import update_file_history_rows_number_based_on_status
+from app.api.repositories.csv import update_file_history_rows_number_based_on_status, create_failed_row, \
+    update_failed_row
 from celery_config.celery_utils import create_celery
 from utils.time_difference import time_difference_in_minutes
 from sqlalchemy.orm import Session
 from sqlalchemy import or_
 from fastapi.encoders import jsonable_encoder
+from celery.result import AsyncResult
+
+
 
 celery = create_celery()
 celery.conf.beat_schedule = {
-    'check-csv-files-every-120-seconds': {
-        'task': 'app.tasks.check_csv_files',
+    # 'check-csv-files-every-120-seconds': {
+    #     'task': 'app.tasks.check_csv_files',
+    #     'schedule': 60.0,
+    # #     # // TODO: after fixing the seessions issue it should be returned to be 900.0 nested of 15.0
+    # },
+    'retry-every-120-seconds': {
+        'task': 'app.tasks.retry_failures',
         'schedule': 30.0,
-        #// TODO: after fixing the seessions issue it should be returned to be 900.0 nested of 15.0
     },
 }
 
 
-@celery.task
+@celery.task()
 def check_csv_files():
     """
     Check CSV files configuration model and schedule tasks if necessary.
     """
     db = CRUD().db_conn()
-    tasks = db.query(ProcessConfig).filter(ProcessConfig.is_active==True)
+    tasks = db.query(Parser).filter(Parser.is_active == True)
     for task in tasks:
         file_path = task.file_path
         file_name = task.file_name
@@ -36,10 +44,10 @@ def check_csv_files():
         file_id = task.id
         process_id = task.process_id
 
-        history = db.query(FileReceiveHistory).filter(
-            FileReceiveHistory.file_id == file_id,
-            or_(FileReceiveHistory.history_status == Status.pending,
-                FileReceiveHistory.history_status == Status.in_progress)
+        history = db.query(FileHistory).filter(
+            FileHistory.file_id == file_id,
+            or_(FileHistory.history_status == Status.pending,
+                FileHistory.history_status == Status.in_progress)
         ).first()
         if history:
             return f"THERE IS FILE STILL RUNNING {jsonable_encoder(history)}"
@@ -84,13 +92,14 @@ def add_tasks(file_id, file_path, file_name, frequency, process_id, company_id, 
             final_result = f"FILE: '{result['file_name_as_received']}' SENT to celery \n \n \n \n " + f"  {result['core_response'][:2]}"
         return final_result
 
+
 @celery.task(name="set_mapper_active")
 def mapper_activate(mapper_id: int):
     task_id = celery.current_task.request.id
 
     db: Session = CRUD().db_conn()
 
-    mapper = db.query(ProcessConfig).filter(ProcessConfig.id == mapper_id)
+    mapper = db.query(Parser).filter(Parser.id == mapper_id)
     mapper_obj = mapper.first()
     if not mapper_obj:
         return {"mapper_id": mapper_id, "status": "Not Exists"}
@@ -112,9 +121,9 @@ def mapper_activate(mapper_id: int):
                 db.commit()
 
                 mapper_tasks = db.query(MapperTask).filter(MapperTask.company_id == mapper_obj.company_id,
-                                                            MapperTask.task_name == "set_mapper_active",
-                                                            MapperTask.file_id == mapper_obj.id,
-                                                            MapperTask.status == CeleryTaskStatus.received)
+                                                           MapperTask.task_name == "set_mapper_active",
+                                                           MapperTask.file_id == mapper_obj.id,
+                                                           MapperTask.status == CeleryTaskStatus.received)
                 mapper_tasks.update({MapperTask.status: CeleryTaskStatus.success})
                 db.commit()
 
@@ -122,24 +131,80 @@ def mapper_activate(mapper_id: int):
         else:
             return {"mapper": mapper_obj.file_name, "status": "Cant change status, no profile linked."}
 
+
+@celery.task()
+def retry_failures():
+    db = CRUD().db_conn()
+    failed_rows = db.query(FileHistoryFailedRows).filter(FileHistoryFailedRows.number_of_reties <= 5).all()
+    if not failed_rows:
+        return "no failures with less 5 retries exist"
+    for failed_row in failed_rows:
+        original_file_history = db.query(FileHistory).filter(
+            FileHistory.id == failed_row.history_id).first()
+        parser = db.query(Parser).filter(
+            Parser.id == original_file_history.file_id).first()
+        if failed_row.task_id is not None:
+            task = AsyncResult(failed_row.task_id, app=celery)
+
+            if task.state not in ['PENDING', "STARTED", "RETRY"] or not task.ready():
+                    send_collected_data.delay(parser.company_id, parser.process_id,
+                                              failed_row.row_number, failed_row.history_id, failed_row.row_data,
+                                              failed_row.file_id, True, failed_row.id)
+        else:
+                send_collected_data.delay(parser.company_id, parser.process_id,
+                                          failed_row.row_number, failed_row.history_id, failed_row.row_data,
+                                          failed_row.file_id, True, failed_row.id)
+    return "Start retry failures"
+
+
 @celery.task(name='send row')
-def send_collected_data(company_id, process_id, row_number, history_id, data):
+def send_collected_data(company_id, process_id, row_number, history_id, data, file_id, is_retry=False,
+                        row_history_id=None):
+
+    task_id = celery.current_task.request.id
     host = os.environ.get('PRIVATE_CORE_ENDPOINT')
     headers = {
         "Host": "parser:8000"
     }
     url = f"{host}/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+    db = CRUD().db_conn()
+
     try:
-        response = requests.request("POST", url, headers=headers, data=data)
-        if response.status_code == 201:
-            status = Status.success
+
+        row_history = db.query(FileHistoryFailedRows).filter(FileHistoryFailedRows.id == row_history_id)
+        if not row_history.first() and is_retry:
+            return {"core_response": "Nothing to send"}
         else:
-            status = Status.failed
-        db = CRUD().db_conn()
-        update_file_history_rows_number_based_on_status(history_id, status, db)
+            response = requests.request("POST", url, headers=headers, data=data)
+            db = CRUD().db_conn()
+
+            if response.status_code == 201:
+                status = Status.success
+                update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
+                                  is_retry=is_retry, db=db)
+
+            else:
+                status = Status.failed
+                if not is_retry:
+                    row_history = db.query(FileHistoryFailedRows).filter(
+                        FileHistoryFailedRows.id == row_history_id).first()
+                    if row_history.number_of_reties <= 5:
+                        create_failed_row(history_id=history_id, file_id=file_id, row_number=row_number, row_data=data,
+                                          task_id=task_id)
+                        update_file_history_rows_number_based_on_status(history_id, status, db)
+                else:
+                    update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
+                                      is_retry=is_retry, db=db)
+
     except:
         status = Status.failed
-        db = CRUD().db_conn()
-        update_file_history_rows_number_based_on_status(history_id, status, db)
+        if not is_retry:
+            create_failed_row(history_id=history_id, file_id=file_id, row_number=row_number, row_data=data,
+                              task_id=task_id)
+            update_file_history_rows_number_based_on_status(history_id, status, db)
+        else:
+            update_failed_row(history_id=history_id, row_history_id=row_history_id, status=status, task_id=task_id,
+                              is_retry=is_retry, db=db)
         response = "connection error"
     return {"core_response": str(response)}
+

@@ -2,7 +2,7 @@ import codecs
 import csv
 import os
 import chardet
-from app.api.models import MapperProfile, Profile
+from app.api.models import MapperProfile, Profile, FileHistory
 from app.api.repositories.common import CRUD
 from app.api.repositories.csv import get_file_history, get_file_mapper, create_file_history, update_last_run
 from app.tasks import send_collected_data
@@ -101,7 +101,7 @@ class CSVHelper:
 
                 self.remove_temp_file(f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
-                x = self.send_data(self.company_id, self.process_id, mapped_data)
+                x = self.send_data(self.process_id, mapped_data)
                 response = {"file_name_as_received": self.file_name_as_received, "core_response": x}
                 return response
     def copy_file_to_tmp_sftp(self):
@@ -154,11 +154,12 @@ class CSVHelper:
 
         return mapped_data
 
-    def send_data(self, company_id, process_id, data):
+    def send_data(self, process_id, data):
         responses = []
         for idx, _obj in enumerate(data):
-            response = send_collected_data.delay(company_id=company_id, process_id=process_id, data=_obj,
-                                                 row_number=idx+1, history_id=self.history_rec.id)
+            response = send_collected_data.delay(self.company_id, process_id, idx+1, self.history_rec.id,
+                                                 _obj, self.file_id)
+
             responses.append(response)
 
         return responses

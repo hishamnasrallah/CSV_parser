@@ -4,8 +4,8 @@ from datetime import datetime
 import pytz
 from fastapi import HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from app.api.models import FileReceiveHistory, ProcessConfig, ProcessMapField, MapperTask, CeleryTaskStatus, \
-    MapperProfile, Profile, Status
+from app.api.models import FileHistory, Parser, ProcessMapField, MapperTask, CeleryTaskStatus, \
+    MapperProfile, Profile, Status, FileHistoryFailedRows, FileReceiveHistoryDetail
 from app.api.repositories.common import CRUD
 from app.brokers.decapolis_core import CoreApplicationBroker
 from core.exceptions.csv import CSVConfigDoesNotExist, FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
@@ -23,15 +23,15 @@ def mappers_configs(token, db):
     :return: it will return all mapping configurations for the specific company
     """
 
-    configs = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"]).all()
+    configs = db.query(Parser).filter(Parser.company_id == token["company"]["id"]).all()
     return jsonable_encoder(configs)
 
 
 def mapper_config_filter(token, name_contains, db):
     company_id = token["company"]["id"]
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == company_id,
-                                                   ProcessConfig.file_name.ilike(f'%{name_contains}%')
-                                                   ).all()
+    mapper_config = db.query(Parser).filter(Parser.company_id == company_id,
+                                            Parser.file_name.ilike(f'%{name_contains}%')
+                                            ).all()
     return jsonable_encoder(mapper_config)
 
 
@@ -44,8 +44,8 @@ def mapper_details(token, id, db):
     :return: the specfic mapper configuration details with field mapping
     """
 
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.company_id == token["company"]["id"],
-                                                   ProcessConfig.id == id).first()
+    mapper_config = db.query(Parser).filter(Parser.company_id == token["company"]["id"],
+                                            Parser.id == id).first()
     if not mapper_config:
         raise CSVConfigDoesNotExist
 
@@ -73,9 +73,16 @@ def mappers_history(token, file_id, db):
     :param db: is the database connection
     :return: all history records for specific file
     """
-    configs = db.query(FileReceiveHistory).filter(FileReceiveHistory.file_id == file_id).all()
-    jsonable_encoder(configs)
-    return jsonable_encoder(configs)
+    result = []
+    file_histories = db.query(FileHistory).filter(FileHistory.file_id == file_id).all()
+    for file_history in file_histories:
+        file_history_detail = db.query(FileReceiveHistoryDetail).filter(FileReceiveHistoryDetail.history_id == file_history.id).first()
+        file_history_dict = jsonable_encoder(file_history)
+        file_history_dict["total_rows"] = file_history_detail.total_rows
+        file_history_dict["total_success"] = file_history_detail.total_success
+        file_history_dict["total_failure"] = file_history_detail.total_failure
+        result.append(file_history_dict)
+    return jsonable_encoder(result)
 
 
 def delete_config(id, token, db):
@@ -86,7 +93,7 @@ def delete_config(id, token, db):
     :param db: the database connection
     :return: nothing
     """
-    config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == token["company"]["id"])
+    config = db.query(Parser).filter(Parser.id == id, Parser.company_id == token["company"]["id"])
     if not config.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CSVConfigDoesNotExist().message_key)
     else:
@@ -120,8 +127,7 @@ def get_file_history(file_id, file_name=None, db=CRUD().db_conn()):
     :param db: the database connection
     :return: history for specific file name as received
     """
-    history = db.query(FileReceiveHistory).filter(FileReceiveHistory.file_id == file_id,
-                                                  FileReceiveHistory.file_name_as_received == file_name)
+    history = db.query(FileHistory).filter(FileHistory.file_id == file_id,FileHistory.file_name_as_received == file_name)
     return history
 
 
@@ -140,30 +146,74 @@ def get_company_processes(token, request):
 
 
 def create_file_history(file_id, file_size, file_name_as_received, total_rows, task_id="1"):
-    history_rec = FileReceiveHistory(file_id=file_id, file_size_kb=file_size,
-                                     file_name_as_received=file_name_as_received, total_rows=total_rows,
-                                     total_success=0, total_failure=0, task_id=task_id)
+    history_rec = FileHistory(file_id=file_id, file_size_kb=file_size,
+                              file_name_as_received=file_name_as_received, task_id=task_id)
     history_rec = CRUD().add(history_rec)
+
+    history_rec_details = FileReceiveHistoryDetail(history_id=history_rec.id, file_id=file_id, total_rows=total_rows,
+                                                   total_success=0, total_failure=0)
+    history_rec_details = CRUD().add(history_rec_details)
     return history_rec
 
 
 def update_file_history_rows_number_based_on_status(id, status, db):
-
-    history = db.query(FileReceiveHistory).with_for_update().filter(FileReceiveHistory.id == id).first()
+    history = db.query(FileHistory).filter(FileHistory.id == id).first()
+    history_details = db.query(FileReceiveHistoryDetail).with_for_update().filter(
+        FileReceiveHistoryDetail.history_id == id).first()
 
     if not history:
         raise HistoryDoesNotExist
     if status == Status.success:
-        history.total_success += 1
+        history_details.total_success += 1
     else:
-        history.total_failure += 1
-    if history.total_rows == history.total_success + history.total_failure:
+        history_details.total_failure += 1
+    if history_details.total_rows == history_details.total_success:
         history.history_status = Status.success
+    elif history_details.total_rows != history_details.total_success and \
+            history_details.total_rows == history_details.total_success + history_details.total_failure:
+        history.history_status = Status.failed
+    else:
+        history.history_status = Status.in_progress
+
     db.commit()
 
 
+def create_failed_row(history_id, file_id, row_number, row_data, task_id):
+    row_history_rec = FileHistoryFailedRows(history_id=history_id, file_id=file_id,
+                                            row_number=row_number, number_of_reties=1,
+                                            row_data=row_data, task_id=task_id)
+    row_history_rec = CRUD().add(row_history_rec)
+    return row_history_rec
+
+
+def update_failed_row(history_id, row_history_id, status, task_id, is_retry, db):
+    history = db.query(FileHistory).with_for_update().filter(FileHistory.id == history_id).first()
+    history_details = db.query(FileReceiveHistoryDetail).filter(FileReceiveHistoryDetail.id == history_id).first()
+    row_history = db.query(FileHistoryFailedRows).filter(
+        FileHistoryFailedRows.id == row_history_id).first()
+    if status == Status.failed:
+        row_history.number_of_reties += 1
+        row_history.task_id = task_id
+        db.commit()
+    elif status == Status.success:
+        history_details.total_success += 1
+        if is_retry:
+            history_details.total_failure -= 1
+            row_history.is_success = True
+        if history_details.total_rows == history_details.total_success:
+            history.history_status = Status.success
+        elif history_details.total_rows == history_details.total_success + history_details.total_failure and\
+                history_details.total_rows != history_details.total_success :
+            history.history_status = Status.failed
+        else:
+            history.history_status = Status.in_progress
+        # db.query(FileHistoryFailedRows).filter(
+        #     FileHistoryFailedRows.id == row_history_id).delete()
+        db.commit()
+
+
 def update_last_run(file_config_id, db=CRUD().db_conn()):
-    config = db.query(ProcessConfig).filter(ProcessConfig.id == file_config_id)
+    config = db.query(Parser).filter(Parser.id == file_config_id)
     if not config.first():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=CSVConfigDoesNotExist().message_key)
     else:
@@ -183,8 +233,8 @@ def update_last_run(file_config_id, db=CRUD().db_conn()):
 def change_mapper_status(id, token, db):
     company_id = token["company"]["id"]
 
-    mapper_config_obj = db.query(ProcessConfig).filter(ProcessConfig.id == id,
-                                                       ProcessConfig.company_id == company_id).first()
+    mapper_config_obj = db.query(Parser).filter(Parser.id == id,
+                                                Parser.company_id == company_id).first()
 
     if not mapper_config_obj:
         raise CSVConfigDoesNotExist
@@ -220,7 +270,7 @@ def update_config(request_body, id, token, db):
         request_dict = request_body.dict()
         request_dict["company_id"] = token["company"]["id"]
         mapper = request_dict.pop("mapper", None)
-        mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id)
+        mapper_config = db.query(Parser).filter(Parser.id == id)
         mapper_config_obj = mapper_config.first()
         if "set_active_at" not in request_dict.keys() or request_dict["is_active"]:
             request_dict['set_active_at'] = None
@@ -300,7 +350,7 @@ def create_config(request_body, token, db):
         profile_id = request_dict.pop("profile_id", None)
         if not profile_id:
             request_dict["is_active"] = False
-        rec = ProcessConfig(**request_dict)
+        rec = Parser(**request_dict)
         file_config_rec = CRUD().add(rec)
         if profile_id:
             link_parser_with_profile = MapperProfile(mapper_id=file_config_rec.id, profile_id=profile_id)
@@ -331,7 +381,7 @@ def execute_mapper(token, id, db):
     from utils.csv_helpers import CSVHelper
 
     company_id = token["company"]["id"]
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id)
+    mapper_config = db.query(Parser).filter(Parser.id == id, Parser.company_id == company_id)
 
     if not mapper_config.first():
         raise CSVConfigMapperFieldsDoesNotExist
@@ -350,19 +400,19 @@ def execute_mapper(token, id, db):
 
 def clone_mapper(token, id, db):
     company_id = token["company"]["id"]
-    mapper_config = db.query(ProcessConfig).filter(ProcessConfig.id == id, ProcessConfig.company_id == company_id)
+    mapper_config = db.query(Parser).filter(Parser.id == id, Parser.company_id == company_id)
     if not mapper_config.first():
         raise CSVConfigDoesNotExist
     mapper_config_obj = mapper_config.first()
-    rec = ProcessConfig(process_id=mapper_config_obj.process_id,
-                        company_id=mapper_config_obj.company_id,
-                        file_name=mapper_config_obj.file_name,
-                        file_path=mapper_config_obj.file_path,
-                        frequency=mapper_config_obj.frequency,
-                        description=mapper_config_obj.description,
-                        set_active_at=mapper_config_obj.set_active_at,
-                        is_active=mapper_config_obj.is_active
-                        )
+    rec = Parser(process_id=mapper_config_obj.process_id,
+                 company_id=mapper_config_obj.company_id,
+                 file_name=mapper_config_obj.file_name,
+                 file_path=mapper_config_obj.file_path,
+                 frequency=mapper_config_obj.frequency,
+                 description=mapper_config_obj.description,
+                 set_active_at=mapper_config_obj.set_active_at,
+                 is_active=mapper_config_obj.is_active
+                 )
 
     rec.file_name = f"[CLONE] - {rec.file_name}"
     rec.description = f"[CLONE] - {rec.description}"
@@ -388,7 +438,7 @@ def clone_mapper(token, id, db):
 def upload_CSV(request):
     request_dict = request.dict()
     db = CRUD().db_conn()
-    rec = FileReceiveHistory(**request_dict)
+    rec = FileHistory(**request_dict)
     CRUD().add(rec)
 
     data = {
