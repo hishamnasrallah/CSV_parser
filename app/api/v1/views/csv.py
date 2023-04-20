@@ -22,7 +22,7 @@ router = APIRouter(
 def create_new_parser(request_body: FileTaskConfigRequest,
                       token=Depends(validate_authorization),
                       db: Session = Depends(CRUD().db_conn)):
-    data = csv.create_config(request_body, token, db)
+    data = csv.create_config(request_body, token)
     return http_response(data=data, status=status.HTTP_201_CREATED,
                          message=ResponseConstants.CREATED_MSG)
 
