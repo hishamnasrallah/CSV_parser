@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import APIRouter, Depends, status, Request, Query
 
 from app.api.v1.dependancies.authorization import validate_authorization
@@ -99,6 +101,41 @@ def get_parser_history(request: Request, parser_id: int,
                        db: Session = Depends(CRUD().db_conn)):
     data = csv.mappers_history(parser_id, db)
     return http_response(request=request, data=data, status=status.HTTP_200_OK,
+                         message=ResponseConstants.RETRIEVED_MSG)
+
+
+@router.get("/mapper/history/{history_id}/failures-details/",
+            response_model=DebugHistoryResponse)
+def get_file_history_detail(request: Request, history_id: int,
+                            retires_count: int = Query(None),
+                            task_id: str = Query(None),
+                            date: datetime.date = Query(None),
+                            all: bool = Query(None),
+                            db: Session = Depends(CRUD().db_conn)):
+    data = csv.file_history_detail(history_id, db, retires_count, task_id,
+                                   date)
+    print(data)
+    return http_response(request=request, all=all, data=data,
+                         status=status.HTTP_200_OK,
+                         message=ResponseConstants.RETRIEVED_MSG)
+
+
+@router.get("/mapper/history/{history_id}/export-failures/",
+            response_model=DebugHistoryResponse)
+def export_failures_as_csv(request: Request, history_id: int,
+                           db: Session = Depends(CRUD().db_conn)):
+    data = csv.export_failures_as_csv(history_id, db)
+    return data
+
+
+@router.get("/mapper/history/{history_id}/consume-failures/")
+def consume_failures_rows(request: Request, history_id: int,
+                          failures_ids: list = Query(None),
+                          token=Depends(validate_authorization),
+                          db: Session = Depends(CRUD().db_conn)):
+    data = csv.consume_failures(token, history_id, failures_ids, db)
+    return http_response(data=data,
+                         status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
 
 

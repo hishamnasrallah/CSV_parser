@@ -18,12 +18,11 @@ celery = create_celery()
 celery.conf.beat_schedule = {
     'check-csv-files-every-120-seconds': {
         'task': 'app.tasks.check_csv_files',
-        'schedule': 60.0,
-        # // TODO: after fixing the sessions issue it should be returned to be 900.0 nested of 15.0
+        'schedule': 120.0,
     },
-    'retry-every-120-seconds': {
+    'retry-failures-every-15-minutes': {
         'task': 'app.tasks.retry_failures',
-        'schedule': 30.0,
+        'schedule': 900.0,
     },
 }
 
@@ -34,7 +33,7 @@ def check_csv_files():
     Check CSV files configuration model and schedule tasks if necessary.
     """
     db = CRUD().db_conn()
-    tasks = db.query(Parser).filter(Parser.is_active is True)
+    tasks = db.query(Parser).filter(Parser.is_active == True)
     for task in tasks:
         file_path = task.file_path
         file_name = task.file_name
@@ -148,7 +147,8 @@ def mapper_activate(mapper_id: int):
 def retry_failures():
     db = CRUD().db_conn()
     failed_rows = db.query(FileHistoryFailedRows).filter(
-        FileHistoryFailedRows.number_of_reties <= 5).all()
+        FileHistoryFailedRows.number_of_reties <= 4,
+        FileHistoryFailedRows.is_success == False).all()
     if not failed_rows:
         return "no failures with less 5 retries exist"
     for failed_row in failed_rows:
@@ -156,23 +156,26 @@ def retry_failures():
             FileHistory.id == failed_row.history_id).first()
         parser = db.query(Parser).filter(
             Parser.id == original_file_history.file_id).first()
+        failed_row_double_check = db.query(FileHistoryFailedRows).filter(
+            FileHistoryFailedRows.id == failed_row.id).first()
         if failed_row.task_id is not None:
             task = AsyncResult(failed_row.task_id, app=celery)
-
-            if task.state not in ['PENDING', "STARTED",
-                                  "RETRY"] or not task.ready():
+            if failed_row_double_check.number_of_reties <= 4:
+                if task.state not in ['PENDING', "STARTED",
+                                      "RETRY"] or not task.ready():
+                    send_collected_data.delay(parser.company_id, parser.process_id,
+                                              failed_row.row_number,
+                                              failed_row.history_id,
+                                              failed_row.row_data,
+                                              failed_row.file_id, True,
+                                              failed_row.id)
+        else:
+            if failed_row_double_check.number_of_reties <= 4:
                 send_collected_data.delay(parser.company_id, parser.process_id,
                                           failed_row.row_number,
                                           failed_row.history_id,
                                           failed_row.row_data,
-                                          failed_row.file_id, True,
-                                          failed_row.id)
-        else:
-            send_collected_data.delay(parser.company_id, parser.process_id,
-                                      failed_row.row_number,
-                                      failed_row.history_id,
-                                      failed_row.row_data,
-                                      failed_row.file_id, True, failed_row.id)
+                                          failed_row.file_id, True, failed_row.id)
     return "Start retry failures"
 
 
@@ -205,18 +208,22 @@ def send_collected_data(company_id, process_id, row_number, history_id, data,
                                   row_history_id=row_history_id,
                                   sending_row_status=status,
                                   task_id=task_id,
-                                  is_retry=is_retry, db=db)
+                                  is_retry=is_retry,
+                                  error_msg=response.status_code,
+                                  db=db)
 
             else:
                 status = Status.failed
                 if not is_retry:
                     row_history = db.query(FileHistoryFailedRows).filter(
                         FileHistoryFailedRows.id == row_history_id).first()
-                    if row_history.number_of_reties <= 5:
+                    if row_history.number_of_reties <= 4:
                         create_failed_row(history_id=history_id,
                                           file_id=file_id,
-                                          row_number=row_number, row_data=data,
-                                          task_id=task_id)
+                                          row_number=row_number,
+                                          row_data=data,
+                                          task_id=task_id,
+                                          error_msg=response.json())
                         update_file_history_rows_number_based_on_status(
                             history_id, status, db)
                 else:
@@ -224,14 +231,17 @@ def send_collected_data(company_id, process_id, row_number, history_id, data,
                                       row_history_id=row_history_id,
                                       sending_row_status=status,
                                       task_id=task_id,
-                                      is_retry=is_retry, db=db)
+                                      is_retry=is_retry,
+                                      error_msg=response.json(),
+                                      db=db)
 
-    except:
+    except Exception as e:
+        error_msg = str(e)
         status = Status.failed
         if not is_retry:
             create_failed_row(history_id=history_id, file_id=file_id,
                               row_number=row_number, row_data=data,
-                              task_id=task_id)
+                              error_msg=error_msg, task_id=task_id)
             update_file_history_rows_number_based_on_status(history_id, status,
                                                             db)
         else:
@@ -239,6 +249,8 @@ def send_collected_data(company_id, process_id, row_number, history_id, data,
                               row_history_id=row_history_id,
                               sending_row_status=status,
                               task_id=task_id,
-                              is_retry=is_retry, db=db)
+                              is_retry=is_retry,
+                              error_msg=error_msg,
+                              db=db)
         response = "connection error"
     return {"core_response": str(response)}

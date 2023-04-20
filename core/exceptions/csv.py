@@ -123,3 +123,12 @@ class HistoryDoesNotExist(Exception):
         self.status = 404
 
         super().__init__(self.message_key, self.status)
+
+
+class NoFailuresRows(Exception):
+
+    def __init__(self, message_key=CSVConstants.NO_FAILURE_ROWS):
+        self.message_key = message_key
+        self.status = 404
+
+        super().__init__(self.message_key, self.status)

@@ -83,3 +83,11 @@ class FileHistoryFailedRows(BaseModelMixin, Base):
     row_data = Column(JSON, nullable=False)
     is_success = Column(Boolean, default=False)
     task_id = Column(String(length=255), nullable=True)
+    error_msg = Column(String(length=500), nullable=True)
+
+    def as_dict(self):
+        data = {c.name: getattr(self, c.name) for c in self.__table__.columns}
+        for i in data:
+            if isinstance(data[i], (datetime.datetime, datetime.date)):
+                data[i] = dumps(data[i], indent=4, sort_keys=True, default=str)
+        return data

@@ -74,3 +74,8 @@ class CSVConstants:
         "en": "History doesnt exists",
         "ar": "لا يوجد سجل للتأريخ"
     }
+
+    NO_FAILURE_ROWS = {
+        "en": "There is no failure rows",
+        "ar": "لا يوجد سجلات فشلت مسبقا"
+    }

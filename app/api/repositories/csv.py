@@ -1,5 +1,6 @@
+import os
 import traceback
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import pytz
 from fastapi import HTTPException, status
@@ -14,9 +15,13 @@ from core.exceptions.csv import CSVConfigDoesNotExist, \
     FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
     CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, \
     ProfileAlreadyDeleted, \
-    CantChangeStatusProfileIsInactive, HistoryDoesNotExist
-
+    CantChangeStatusProfileIsInactive, HistoryDoesNotExist, NoFailuresRows, \
+    InvalidAuthentication
+from sqlalchemy import orm
 from utils.delete_specific_task import cancel_task
+from fastapi.responses import StreamingResponse
+import requests
+from utils.generate_csv import generate_csv
 
 logger = logging.getLogger()
 
@@ -97,6 +102,70 @@ def mappers_history(file_id, db):
         file_history_dict["total_failure"] = file_history_detail.total_failure
         result.append(file_history_dict)
     return jsonable_encoder(result)
+
+
+def file_history_detail(history_id, db, reties_count=None, row_task_id=None,
+                        date=None):
+    """
+
+    :param history_id: parser history id
+    :param db: is the database connection
+    :return: all history records for specific file
+    """
+    file_history = db.query(FileHistory).filter(
+        FileHistory.id == history_id)
+    if not file_history.first():
+        raise HistoryDoesNotExist
+    file_history_obj = file_history.first()
+    base_query = db.query(FileHistoryFailedRows).options(
+        orm.defer('history_id')
+    ).filter(
+        FileHistoryFailedRows.history_id == file_history_obj.id)
+
+    if reties_count:
+        base_query = base_query.filter(
+            FileHistoryFailedRows.number_of_reties == reties_count)
+    if row_task_id:
+        base_query = base_query.filter(
+            FileHistoryFailedRows.task_id == row_task_id)
+    if date:
+        base_query = base_query.filter(
+            FileHistoryFailedRows.created_at >= date,
+            FileHistoryFailedRows.created_at < date + timedelta(days=1))
+
+    print(base_query)
+    return jsonable_encoder(base_query.all())
+
+
+def export_failures_as_csv(history_id, db):
+    """
+
+    :param history_id: parser history id
+    :param db: is the database connection
+    :return: all history records for specific file
+    """
+
+    file_history = db.query(FileHistory).filter(
+        FileHistory.id == history_id)
+    if not file_history.first():
+        raise HistoryDoesNotExist
+    file_history_obj = file_history.first()
+    failed_rows = db.query(FileHistoryFailedRows).filter(
+        FileHistoryFailedRows.history_id == file_history_obj.id).all()
+    try:
+        column_names = list(failed_rows[0].as_dict().keys())
+    except:
+        raise NoFailuresRows
+    filename = f"{file_history_obj.file_name_as_received}-failures.csv"
+    rows = [[getattr(row, col.name) for col in
+             FileHistoryFailedRows.__table__.columns] for row in failed_rows]
+
+    response = StreamingResponse(generate_csv(column_names, rows), headers={
+        'Content-Disposition': f'attachment; filename="{filename}"',
+        'Content-Type': 'text/csv'
+    })
+
+    return response
 
 
 def delete_config(parser_id, token, db):
@@ -209,18 +278,21 @@ def update_file_history_rows_number_based_on_status(history_id,
     db.commit()
 
 
-def create_failed_row(history_id, file_id, row_number, row_data, task_id):
+def create_failed_row(history_id, file_id, row_number, row_data, task_id,
+                      error_msg):
     row_history_rec = FileHistoryFailedRows(history_id=history_id,
                                             file_id=file_id,
                                             row_number=row_number,
                                             number_of_reties=1,
-                                            row_data=row_data, task_id=task_id)
+                                            row_data=row_data,
+                                            task_id=task_id,
+                                            error_msg=error_msg)
     row_history_rec = CRUD().add(row_history_rec)
     return row_history_rec
 
 
 def update_failed_row(history_id, row_history_id, sending_row_status, task_id,
-                      is_retry, db):
+                      is_retry, error_msg, db):
     history = db.query(FileHistory).with_for_update().filter(
         FileHistory.id == history_id).first()
     history_details = db.query(FileReceiveHistoryDetail).filter(
@@ -230,6 +302,7 @@ def update_failed_row(history_id, row_history_id, sending_row_status, task_id,
     if sending_row_status == Status.failed:
         row_history.number_of_reties += 1
         row_history.task_id = task_id
+        row_history.error_msg = error_msg
         db.commit()
     elif sending_row_status == Status.success:
         history_details.total_success += 1
@@ -243,6 +316,8 @@ def update_failed_row(history_id, row_history_id, sending_row_status, task_id,
             history.history_status = Status.failed
         else:
             history.history_status = Status.in_progress
+        db.query(FileHistoryFailedRows).filter(
+            FileHistoryFailedRows.id == row_history_id).delete()
         db.commit()
 
 
@@ -442,6 +517,94 @@ def execute_mapper(token, parser_id, db):
                f"  with this path '{mapper_config_obj.file_path}'"
 
     return f"{x} FILE: '{mapper_config_obj.file_name}' SENT to celery \n \n \n \n " + f"  {str(x)}"
+
+
+def consume_failures(token, history_id, failures_ids, db):
+    company_id = token["company"]["id"]
+
+    file_history = db.query(FileHistory).filter(
+        FileHistory.id == history_id)
+    if not file_history.first():
+        raise HistoryDoesNotExist
+    file_history_obj = file_history.first()
+    parser = db.query(Parser).filter(
+        Parser.id == file_history_obj.file_id)
+    if not parser.first():
+        raise CSVConfigDoesNotExist
+    parser_obj = parser.first()
+    process_id = parser_obj.process_id
+    if parser_obj.company_id != company_id:
+        raise InvalidAuthentication
+
+    failed_rows_base_query = db.query(FileHistoryFailedRows).filter(
+        FileHistoryFailedRows.history_id == history_id)
+    if len(failures_ids) > 0:
+        failed_rows_base_query = failed_rows_base_query.filter(
+            FileHistoryFailedRows.id.in_(failures_ids)).all()
+    if not failed_rows_base_query:
+        raise NoFailuresRows
+    result = []
+    for failed_row in failed_rows_base_query:
+        host = os.environ.get('PRIVATE_CORE_ENDPOINT')
+        headers = {
+            "Host": "parser:8000"
+        }
+        url = f"{host}/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
+        try:
+            # response = requests.Request()
+            # response.status_code = 201
+            # response.content = "success"
+
+            response = requests.request("POST", url, headers=headers,
+                                        data=failed_row.row_data)
+            if response.status_code == 201:
+                status = Status.success
+                update_failed_row(history_id=history_id,
+                                  row_history_id=failed_row.id,
+                                  sending_row_status=status,
+                                  task_id="Ran Manual",
+                                  is_retry=True,
+                                  error_msg=response.status_code,
+                                  db=db)
+                result.append({"row_numer": failed_row.row_number,
+                               "row_data": failed_row.row_data,
+                               "parser_id": failed_row.file_id,
+                               "history_id": failed_row.history_id,
+                               "core_response": response.content,
+                               "status_code": 201})
+            else:
+                status = Status.failed
+                update_failed_row(history_id=history_id,
+                                  row_history_id=failed_row.id,
+                                  sending_row_status=status,
+                                  task_id="Ran Manual",
+                                  is_retry=True,
+                                  error_msg=response.status_code,
+                                  db=db)
+                result.append({"row_numer": failed_row.row_number,
+                               "row_data": failed_row.row_data,
+                               "parser_id": failed_row.file_id,
+                               "history_id": failed_row.history_id,
+                               "core_response": response.content,
+                               "status_code": response.status_code})
+        except Exception as e:
+
+            status = Status.failed
+            update_failed_row(history_id=history_id,
+                              row_history_id=failed_row.id,
+                              sending_row_status=status,
+                              task_id="Ran Manual",
+                              is_retry=True,
+                              error_msg=(str(e)),
+                              db=db)
+            result.append({"row_numer": failed_row.row_number,
+                           "row_data": failed_row.row_data,
+                           "parser_id": failed_row.file_id,
+                           "history_id": failed_row.history_id,
+                           "core_response": str(e),
+                           "status_code": 500})
+
+    return jsonable_encoder(result)
 
 
 def clone_mapper(token, parser_id, db):

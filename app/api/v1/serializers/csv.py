@@ -132,3 +132,7 @@ class DebugHistory(BaseModel):
 
 class DebugHistoryResponse(BaseResponse):
     data: List[DebugHistory]
+
+
+class FailedRows(BaseModel):
+    pass
