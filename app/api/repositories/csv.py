@@ -15,8 +15,7 @@ from core.exceptions.csv import CSVConfigDoesNotExist, \
     FailedCreateNewFileTaskConfig, FailedToUpdateFileTaskConfig, \
     CSVConfigMapperFieldsDoesNotExist, CantChangeStatusNoProfileAssigned, \
     ProfileAlreadyDeleted, \
-    CantChangeStatusProfileIsInactive, HistoryDoesNotExist, NoFailuresRows, \
-    InvalidAuthentication
+    CantChangeStatusProfileIsInactive, HistoryDoesNotExist, NoFailuresRows
 from sqlalchemy import orm
 from utils.delete_specific_task import cancel_task
 from fastapi.responses import StreamingResponse
@@ -132,8 +131,6 @@ def file_history_detail(history_id, db, reties_count=None, row_task_id=None,
         base_query = base_query.filter(
             FileHistoryFailedRows.created_at >= date,
             FileHistoryFailedRows.created_at < date + timedelta(days=1))
-
-    print(base_query)
     return jsonable_encoder(base_query.all())
 
 
@@ -528,13 +525,11 @@ def consume_failures(token, history_id, failures_ids, db):
         raise HistoryDoesNotExist
     file_history_obj = file_history.first()
     parser = db.query(Parser).filter(
-        Parser.id == file_history_obj.file_id)
+        Parser.id == file_history_obj.file_id, Parser.company_id == company_id)
     if not parser.first():
         raise CSVConfigDoesNotExist
     parser_obj = parser.first()
     process_id = parser_obj.process_id
-    if parser_obj.company_id != company_id:
-        raise InvalidAuthentication
 
     failed_rows_base_query = db.query(FileHistoryFailedRows).filter(
         FileHistoryFailedRows.history_id == history_id)
@@ -551,10 +546,6 @@ def consume_failures(token, history_id, failures_ids, db):
         }
         url = f"{host}/api/v2/process/{process_id}/comapny/{company_id}/active_process/submit"
         try:
-            # response = requests.Request()
-            # response.status_code = 201
-            # response.content = "success"
-
             response = requests.request("POST", url, headers=headers,
                                         data=failed_row.row_data)
             if response.status_code == 201:

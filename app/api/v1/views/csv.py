@@ -114,7 +114,6 @@ def get_file_history_detail(request: Request, history_id: int,
                             db: Session = Depends(CRUD().db_conn)):
     data = csv.file_history_detail(history_id, db, retires_count, task_id,
                                    date)
-    print(data)
     return http_response(request=request, all=all, data=data,
                          status=status.HTTP_200_OK,
                          message=ResponseConstants.RETRIEVED_MSG)
