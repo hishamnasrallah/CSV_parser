@@ -1,18 +1,16 @@
 from typing import List, Optional
 import datetime
-
 import pydash
-from fastapi import HTTPException
-from pydantic import Field, validator
-
+from pydantic import validator
 from app.api.repositories.common import CRUD
-from core.constants.regex import MAPPER_DESCRIPTION_VALIDATION_REGEX
-from core.exceptions.csv import SetActiveDateMustBeInFuture
-from core.exceptions.profile import ProfileDoesNotExistBadRequest, ProfileDeletedError, ProfileIsInactive, \
+from core.exceptions.csv import SetActiveDateMustBeInFuture, \
+    AnotherParserHasSameProcessID
+from core.exceptions.profile import ProfileDoesNotExistBadRequest, \
+    ProfileDeletedError, ProfileIsInactive, \
     ProfileIsMandatory
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
-from app.api.models import Frequency, Profile
+from app.api.models import Frequency, Profile, Parser
 
 
 class FileTaskConfig(BaseModel):
@@ -24,8 +22,10 @@ class FileTaskConfig(BaseModel):
     is_active: bool
     set_active_at: Optional[datetime.datetime] = None
 
+
 class FileTaskResponse(BaseResponse):
     data: List[FileTaskConfig]
+
 
 class FieldMapper(BaseModel):
     field_name: str
@@ -45,7 +45,7 @@ class FileTaskConfigRequest(BaseModel):
     profile_id: Optional[int] = None
 
     @validator('set_active_at', always=True)
-    def check_future_datetime(cls, v, values):
+    def check_future_datetime(cls, v):
         if v is not None and v <= datetime.datetime.now():
             field_name = pydash.camel_case('set_active_at')
             raise SetActiveDateMustBeInFuture(field_name=field_name)
@@ -70,6 +70,16 @@ class FileTaskConfigRequest(BaseModel):
             if values.get('is_active') or values.get('set_active_at'):
                 raise ProfileIsMandatory(field_name=field_name)
         return v
+
+    @validator('process_id', always=True)
+    def check_process_id(cls, v, values):
+        if v:
+            db = CRUD().db_conn()
+            parser_with_same_process_id = db.query(Parser).filter(
+                Parser.process_id == v)
+
+            if parser_with_same_process_id.first():
+                raise AnotherParserHasSameProcessID
 
 
 class FileTaskConfigBaseResponse(BaseModel):
@@ -122,4 +132,3 @@ class DebugHistory(BaseModel):
 
 class DebugHistoryResponse(BaseResponse):
     data: List[DebugHistory]
-

@@ -16,8 +16,6 @@ def paginator(request: Request, data, page_num: int = 1, page_size: int = 10):
     except:
         page_size = page_size
 
-
-
     start = (page_num - 1) * page_size
     end = start + page_size
     data_length = len(data)
@@ -27,13 +25,12 @@ def paginator(request: Request, data, page_num: int = 1, page_size: int = 10):
         "count": page_size,
         "next": None,
         "previous": None
-                }
-
+    }
 
     if end >= data_length:
         response["next"] = None
         if page_num > 1:
-            query_params['page_num'] = page_num-1
+            query_params['page_num'] = page_num - 1
             query_params['page_size'] = page_size
             new_query_string = urlencode(query_params, doseq=True)
             url = urlunsplit(("", "", parsed_url.path, new_query_string, ""))
@@ -42,7 +39,7 @@ def paginator(request: Request, data, page_num: int = 1, page_size: int = 10):
             response["previous"] = None
     else:
         if page_num > 1:
-            query_params['page_num'] = page_num-1
+            query_params['page_num'] = page_num - 1
             query_params['page_size'] = page_size
             new_query_string = urlencode(query_params, doseq=True)
             url = urlunsplit(("", "", parsed_url.path, new_query_string, ""))

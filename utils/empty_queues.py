@@ -1,8 +1,6 @@
 import redis
 import os
 
-from app.tasks import celery
-
 
 def empty_redis():
     try:

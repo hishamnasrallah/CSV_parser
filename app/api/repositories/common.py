@@ -2,7 +2,6 @@ from core.database.settings.session_maker import DBSession
 
 
 def crud(query):
-
     with DBSession() as db:
         db.add(query)
         db.commit()
@@ -11,7 +10,6 @@ def crud(query):
 
 
 class CRUD:
-
 
     def __init__(self):
         self._query = None
@@ -30,7 +28,6 @@ class CRUD:
         db.refresh(self._query)
         return self._query
 
-
     def get(self):
         pass
 
@@ -42,5 +39,6 @@ class CRUD:
 
     def filter(self, model, field, value):
         database = self.db_conn()
-        result = database.query(eval(model)).filter(exec(model.eval(".field==value)")))
+        result = database.query(eval(model)).filter(
+            exec(model.eval(".field==value)")))
         return result

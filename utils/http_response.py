@@ -18,16 +18,17 @@ def convert_dict_to_camel_case(data):
         new_data = {}
         for key, value in data.items():
             new_key = pydash.camel_case(key)
-            new_value = convert_dict_to_camel_case(value) if isinstance(value,
-                                                                        (dict,
-                                                                         list)) else value
+            new_value = convert_dict_to_camel_case(value) \
+                if isinstance(value,
+                              (dict,
+                               list)) else value
             new_data[new_key] = new_value
         return new_data
     elif isinstance(data, list):
         new_data = []
         for item in data:
             new_value = convert_dict_to_camel_case(item) if isinstance(item, (
-            dict, list)) else item
+                dict, list)) else item
             new_data.append(new_value)
         return new_data
     else:
@@ -104,7 +105,9 @@ def http_error_response(error_message, status, language="en",
     if 400 <= status <= 499:
         try:
             try:
-                error_message = {next(iter(error_message)): error_message[next(iter(error_message))][language]}
+                error_message = {next(iter(error_message)):
+                                     error_message[next(iter(error_message))][
+                                         language]}
             except:
                 error_message = error_message[language]
         except (KeyError, TypeError):

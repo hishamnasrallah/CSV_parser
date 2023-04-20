@@ -1,12 +1,8 @@
 import datetime
-
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy import func
-
 from app.api.models.common import BaseModelMixin
-from app.api.repositories.common import CRUD
 from core.database.settings.base import Base
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, BigInteger, JSON
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum, \
+    BigInteger, JSON
 import enum
 from json import dumps
 

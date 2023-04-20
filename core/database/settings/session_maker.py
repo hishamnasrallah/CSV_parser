@@ -1,9 +1,7 @@
 from sqlalchemy.orm import sessionmaker, scoped_session
 from sqlalchemy import create_engine
-# from core.utils.env import URL_MASTER, URL_SLAVE, URL_TEST
-
-# from app.database.migrations.env import DATABASE_URL
 from core.settings.base import settings
+
 READ_WRITE = 'read_write'
 READ = 'read'
 TEST_DB = 'test'
@@ -14,11 +12,13 @@ class _DBPool:
         self.name = name
         self.url = url
         self.engine = create_engine(url, pool_size=pool_size, max_overflow=10)
-        self.session = scoped_session(sessionmaker(autocommit=False, autoflush=False, bind=self.engine))
+        self.session = scoped_session(
+            sessionmaker(autocommit=False, autoflush=False, bind=self.engine))
         return
 
 
-# global handle for the DB session, it is a callable object, once called, it will create a new background session.
+# global handle for the DB session, it is a callable object,
+# once called, it will create a new background session.
 pools = {READ: _DBPool(READ, settings.db_url),
          READ_WRITE: _DBPool(READ_WRITE, settings.db_url),
          TEST_DB: _DBPool(TEST_DB, settings.db_url)}
@@ -27,6 +27,7 @@ pools = {READ: _DBPool(READ, settings.db_url),
 class DBSession:
     """Example Usage with DBSession() as database: do sth """
     """Example 2 Usage with DBSession(READ) as database: do sth """
+
     def __init__(self, pool_name=READ_WRITE):
         self.pool = pools.get(pool_name, READ_WRITE)
 
