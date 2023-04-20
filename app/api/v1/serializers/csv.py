@@ -80,7 +80,7 @@ class FileTaskConfigRequest(BaseModel):
 
             if parser_with_same_process_id.first():
                 raise AnotherParserHasSameProcessID
-
+        return v
 
 class FileTaskConfigBaseResponse(BaseModel):
     mapper: List[FieldMapper]
