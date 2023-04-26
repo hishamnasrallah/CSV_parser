@@ -13,6 +13,9 @@ class SFTPHelper:
         self.client.connect(server_ip, username=username, password=password)
         self.sftp = self.client.open_sftp()
 
+        if not self.sftp:
+            raise Exception("Connection closed")
+
     def change_dir(self, path="transfer/napproai"):
         self.sftp.chdir(path)
 
@@ -33,6 +36,7 @@ class SFTPHelper:
         return files
 
     def close_connection(self):
+
         self.sftp.close()
         self.client.close()
 

@@ -87,9 +87,11 @@ class CSVHelper:
             raise ProfileIsInactive
 
         with SFTPHelper() as sftp_helper:
+
             sftp_helper.connect(server_ip=profile.base_server_url,
                                 username=profile.server_connection_username,
                                 password=profile.server_connection_password)
+
             sftp_helper.change_dir(path=self.file_path)
             self.sftp_helper = sftp_helper
             new_files_names = self.read_files_by_prefix(prefix=self.file_name)
@@ -103,9 +105,6 @@ class CSVHelper:
                 self.get_file_info()
                 mapped_data = self.read_file(file_name=file_name,
                                              headers=data_headers)
-
-                self.remove_temp_file(
-                    f"{self.current_dir}/tmp/" + self.file_name_as_received)
 
                 x = self.send_data(self.process_id, mapped_data)
                 response = {
