@@ -1,5 +1,7 @@
 import csv
 import os
+from time import sleep
+
 import chardet
 from app.api.models import MapperProfile, Profile
 from app.api.repositories.common import CRUD
@@ -111,9 +113,17 @@ class CSVHelper:
                     "core_response": x}
                 return response
 
+    def checK_if_file_copied(self):
+        current_dir = os.path.dirname(
+            os.path.dirname(os.path.abspath(__file__)))
+        if not os.path.isfile(f"{current_dir}/tmp/{self.file_name_as_received}"):
+            sleep(5)
+            self.checK_if_file_copied()
+
     def copy_file_to_tmp_sftp(self):
         self.sftp_helper.copy_file_from_server(
             file_name=self.file_name_as_received)
+        self.checK_if_file_copied()
 
     def remove_temp_file(self, full_file_path):
         os.unlink(full_file_path)
