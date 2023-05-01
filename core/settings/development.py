@@ -12,5 +12,3 @@ class DevAppSettings(AppSettings):
 
     class Config(AppSettings.Config):
         env_file = ".env"
-
-

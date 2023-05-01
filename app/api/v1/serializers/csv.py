@@ -1,57 +1,110 @@
-from typing import List
-from pydantic import Field
+from typing import List, Optional
+import datetime
+import pydash
+from pydantic import validator
+from app.api.repositories.common import CRUD
+from core.exceptions.csv import SetActiveDateMustBeInFuture, \
+    AnotherParserHasSameProcessID
+from core.exceptions.profile import ProfileDoesNotExistBadRequest, \
+    ProfileDeletedError, ProfileIsInactive, \
+    ProfileIsMandatory
 from core.serializers.base import BaseModel
 from core.serializers.response import BaseResponse
-from app.api.models import Frequency
+from app.api.models import Frequency, Profile, Parser
 
-# from utils.upload_manager import upload_file
-
-# class CSVFile(BaseModel):
-#     filename: str
-#     # content_type: str
-#     size: int
-#
-#     @staticmethod
-#     def serialize(file: UploadFile):
-#         return CSVFile(
-#             filename=file.filename,
-#             # content_type=file.content_type,
-#             size=len(file.read())
-#         )
 
 class FileTaskConfig(BaseModel):
     file_name: str
     frequency: Frequency
     file_path: str
+    process_id: int
+    description: str
+    is_active: bool
+    set_active_at: Optional[datetime.datetime] = None
+
+
+class FileTaskResponse(BaseResponse):
+    data: List[FileTaskConfig]
+
+
+class FieldMapper(BaseModel):
+    field_name: str
+    map_field_name: str
+    is_ignored: bool
 
 
 class FileTaskConfigRequest(BaseModel):
-    # template_file_key: str
-    mapper: dict
+    mapper: List[FieldMapper]
     file_name: str
     frequency: Frequency
     file_path: str
     process_id: int
+    description: str
+    is_active: bool
+    set_active_at: Optional[datetime.datetime] = None
+    profile_id: Optional[int] = None
 
-    # @classmethod
-    # async def as_form(cls, mapper: dict, map_name: str, frequency: Frequency, path: str, file: UploadFile = Form(),):
-    #     try:
-    #         ext = file.filename.split(".")[-1]
-    #         # path = await upload_file(profile_img)
-    #
-    #         return file
-    #     except Exception as e:
-    #         print("Exception :", e)
+    @validator('set_active_at', always=True)
+    def check_future_datetime(cls, v):
+        if v is not None and v <= datetime.datetime.now():
+            field_name = pydash.camel_case('set_active_at')
+            raise SetActiveDateMustBeInFuture(field_name=field_name)
+
+        return v
+
+    @validator('profile_id', always=True)
+    def check_profile_id(cls, v, values):
+        field_name = pydash.camel_case('profile_id')
+
+        # Add validation to check if the profile is deleted or inactive
+        if v:
+            db = CRUD().db_conn()
+            profile = db.query(Profile).filter(Profile.id == v).first()
+            if not profile:
+                raise ProfileDoesNotExistBadRequest(field_name=field_name)
+            if profile.is_deleted:
+                raise ProfileDeletedError(field_name=field_name)
+            if not profile.is_active:
+                raise ProfileIsInactive(field_name=field_name)
+        else:
+            if values.get('is_active') or values.get('set_active_at'):
+                raise ProfileIsMandatory(field_name=field_name)
+        return v
+
+    @validator('process_id', always=True)
+    def check_process_id(cls, v, values):
+        if v:
+            db = CRUD().db_conn()
+            parser_with_same_process_id = db.query(Parser).filter(
+                Parser.process_id == v)
+
+            if parser_with_same_process_id.first():
+                raise AnotherParserHasSameProcessID
+        return v
+
+class FileTaskConfigBaseResponse(BaseModel):
+    mapper: List[FieldMapper]
+    file_name: str
+    frequency: Frequency
+    file_path: str
+    process_id: int
+    description: str
+    is_active: bool
+    set_active_at: Optional[datetime.datetime] = None
 
 
 class FileTaskConfigResponse(BaseResponse):
-    data: List[FileTaskConfigRequest]
+    data: List[FileTaskConfigBaseResponse]
 
 
 class Dashboard(BaseModel):
     file_name: str
     file_path: str
     frequency: Frequency
+    process_id: int
+    description: str
+    is_active: bool
+    set_active_at: Optional[datetime.datetime] = None
 
 
 class DashboardResponse(BaseResponse):
@@ -62,6 +115,7 @@ class MapperDetail(BaseModel):
     configuration_info: Dashboard
     field_name: str
     map_field_name: str
+    is_ignored: bool
 
 
 class MapperDetailResponse(BaseResponse):
@@ -78,7 +132,3 @@ class DebugHistory(BaseModel):
 
 class DebugHistoryResponse(BaseResponse):
     data: List[DebugHistory]
-
-
-class FileProcessConfig(BaseModel):
-    pass

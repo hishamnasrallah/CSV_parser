@@ -33,11 +33,11 @@ Then run celery:
 
 Note: using the following command will make sure that celery will be reloaded automatic when any changes happen in the code
 
-     watchfiles   --filter python   'celery -A app.main.celery worker --loglevel=info'
+     watchfiles   --filter python   'celery -A app.tasks.celery worker --loglevel=info'
 
 then run flower:
     
-    celery -A main.celery flower --port=5555
+    celery -A app.tasks.celery flower --port=5555
 
 Finally, to run the app:
 

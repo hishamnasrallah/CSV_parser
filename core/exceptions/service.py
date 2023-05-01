@@ -6,7 +6,8 @@ class ServiceUnavailable(Exception):
     while using try except you should follow the following style
     try:
         try_dody
-    except {{specify_exception_class}} as e: # e is a variable will contain the error message of the exception
+    except {{specify_exception_class}} as e: # e is a variable will contain
+     the error message of the exception
         exception_body
     """
 
@@ -21,7 +22,8 @@ class NotAcceptable(Exception):
     while using try except you should follow the following style
     try:
         try_dody
-    except {{specify_exception_class}} as e: # e is a variable will contain the error message of the exception
+    except {{specify_exception_class}} as e: # e is a variable will contain
+        the error message of the exception
         exception_body
     """
 
